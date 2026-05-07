@@ -12,12 +12,13 @@ from fastmcp_builder.models import (
     PrimitiveClassification,
     PrimitiveKind,
     PromptContract,
+    PromptNameReport,
     ResourceContract,
     ToolContract,
     ToolNameReport,
     UriStabilityReport,
 )
-from fastmcp_builder.review import check_tool_name_format as _check_tool_name_format, check_uri_stability as _check_uri_stability, description_quality, review_fastmcp_manifest_data
+from fastmcp_builder.review import check_prompt_name_format as _check_prompt_name_format, check_tool_name_format as _check_tool_name_format, check_uri_stability as _check_uri_stability, description_quality, review_fastmcp_manifest_data
 from fastmcp_builder.scaffold import generate_plan
 
 
@@ -138,6 +139,13 @@ def check_tool_description_quality(
     """Check whether a tool description is specific enough for model-controlled use."""
     warnings = description_quality(tool_name, description, schema)
     return DescriptionQualityReport(passed=not warnings, warnings=warnings)
+
+
+@mcp.tool
+def check_prompt_name_format(name: str) -> PromptNameReport:
+    """Check whether a proposed FastMCP prompt name follows naming conventions."""
+    warnings = _check_prompt_name_format(name)
+    return PromptNameReport(passed=not warnings, warnings=warnings)
 
 
 @mcp.tool
