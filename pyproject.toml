@@ -1,6 +1,6 @@
 [project]
 name = "fastmcp-builder-template"
-version = "0.1.0"
+version = "0.1.1"
 description = "Local-first FastMCP v3 builder scaffold for designing and reviewing MCP servers."
 readme = "README.md"
 requires-python = ">=3.11"
