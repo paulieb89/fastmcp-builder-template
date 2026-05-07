@@ -36,6 +36,12 @@ Use these project-scoped skills — invoke with `/skill-name`:
 | Create a new FastMCP server from scratch      | `/fastmcp-scaffold-author`  |
 | Add tools/resources/prompts from a spec file  | `/fastmcp-build-loop`       |
 
+## Task Observer
+
+At the start of any task-oriented session — any interaction where you will use tools and produce deliverables — invoke the `/task-observer` skill before beginning work. This ensures skill improvement opportunities are captured throughout the session.
+
+When loading any skill, check the observation log for OPEN observations tagged to that skill. Apply their insights to the current work, even if the skill file hasn't been updated yet.
+
 ## Branch policy
 
 Work on a feature branch for every non-trivial change:
