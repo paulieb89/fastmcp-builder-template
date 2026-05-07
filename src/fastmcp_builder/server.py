@@ -8,6 +8,7 @@ from fastmcp_builder.docs import list_examples, list_markdown_docs, read_doc, re
 from fastmcp_builder.models import (
     DescriptionQualityReport,
     ErrorDesignReport,
+    ManifestReview,
     ParameterSpec,
     PrimitiveClassification,
     PrimitiveKind,
@@ -57,7 +58,7 @@ def classify_mcp_primitive(
 
 
 @mcp.tool
-def review_fastmcp_manifest(manifest: dict[str, Any]):
+def review_fastmcp_manifest(manifest: dict[str, Any]) -> ManifestReview:
     """Review a FastMCP capability manifest for deterministic design issues."""
     return review_fastmcp_manifest_data(manifest)
 
