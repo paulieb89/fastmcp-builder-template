@@ -7,6 +7,12 @@ from .models import ManifestReview, ReviewFinding, Severity
 
 
 _NAME_PATTERN = re.compile(r"^[a-z][a-z0-9_]{2,63}$")
+_STOP = {"a", "an", "and", "for", "from", "in", "of", "or", "the", "to", "with"}
+_GENERIC_NAME_WORDS = {"tool", "resource", "prompt", "mcp", "fastmcp"}
+
+
+def _words(text: str) -> set[str]:
+    return set(re.findall(r"[a-z0-9]+", text.lower()))
 
 
 def review_fastmcp_manifest_data(manifest: dict[str, Any]) -> ManifestReview:
@@ -162,7 +168,9 @@ def description_quality(name: str, description: str, schema: dict[str, Any]) -> 
         warnings.append("Description is short; include when to use the tool and what it returns.")
     if "and/or" in normalized or "etc" in normalized:
         warnings.append("Description uses ambiguous wording.")
-    if name.replace("_", " ") not in normalized:
+    name_words = {w for w in name.split("_") if w and w not in _STOP and w not in _GENERIC_NAME_WORDS}
+    description_words = _words(description)
+    if name_words and not name_words.intersection(description_words):
         warnings.append("Description does not clearly connect to the tool name.")
     if schema.get("type") != "object":
         warnings.append("Schema should be a JSON object with named properties.")
