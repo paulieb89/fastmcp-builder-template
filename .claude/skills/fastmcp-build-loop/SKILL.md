@@ -40,6 +40,13 @@ Confirm the spec has at least one section:
 grep -c "^## " ${1}
 ```
 
+Check current branch — if on `main`, create a feature branch before touching any code:
+
+```bash
+git branch --show-current
+git checkout -b feat/<spec-name-slug>
+```
+
 ---
 
 ## Step 1 — Select next unit

@@ -24,3 +24,24 @@ This repository is a local-first FastMCP builder template.
 3. Implement small, testable changes.
 4. Run `uv run pytest`.
 5. Summarize changed files and verification results.
+
+## Skills
+
+Use these project-scoped skills — invoke with `/skill-name`:
+
+| When you want to...                          | Use                         |
+|----------------------------------------------|-----------------------------|
+| Decide if something is a tool/resource/prompt | `/mcp-primitive-classification` |
+| Review an existing or proposed server design  | `/fastmcp-design-review`    |
+| Create a new FastMCP server from scratch      | `/fastmcp-scaffold-author`  |
+| Add tools/resources/prompts from a spec file  | `/fastmcp-build-loop`       |
+
+## Branch policy
+
+Work on a feature branch for every non-trivial change:
+
+```bash
+git checkout -b feat/<short-description>
+```
+
+Open a PR to `main` when tests pass. Direct commits to `main` are only for docs and config.
