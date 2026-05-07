@@ -31,3 +31,7 @@ uv run pytest
 ```
 
 Keep pull requests small and explain which MCP primitive boundary the change affects.
+
+## CI
+
+GitHub Actions runs `uv sync` and `uv run pytest` on every push and pull request to `main`. A PR cannot be considered ready until the CI badge is green. The workflow is at [.github/workflows/ci.yml](.github/workflows/ci.yml).

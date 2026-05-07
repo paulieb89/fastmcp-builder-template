@@ -1,5 +1,7 @@
 # FastMCP Builder Template
 
+[![CI](https://github.com/paulieb89/fastmcp-builder-template/actions/workflows/ci.yml/badge.svg)](https://github.com/paulieb89/fastmcp-builder-template/actions/workflows/ci.yml)
+
 A local-first FastMCP v3 starter template for building, reviewing, and teaching MCP server design. It gives Claude Code a project-scoped MCP server with tools, resources, prompts, skills, and explicit slash-command workflows.
 
 ## Quick Start
