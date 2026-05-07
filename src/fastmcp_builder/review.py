@@ -189,6 +189,28 @@ def check_tool_name_format(name: str) -> list[str]:
     return warnings
 
 
+def check_prompt_name_format(name: str) -> list[str]:
+    warnings: list[str] = []
+    stripped = name.strip()
+
+    if not stripped:
+        warnings.append("Prompt name is empty.")
+        return warnings
+
+    if not _SNAKE_CASE_PATTERN.match(stripped):
+        warnings.append("Prompt name must be snake_case: lowercase letters, digits, and underscores only, starting with a letter.")
+
+    if len(stripped) < 3:
+        warnings.append("Prompt name is too short; use at least 3 characters.")
+    elif len(stripped) > 64:
+        warnings.append("Prompt name is too long; keep it under 64 characters.")
+
+    if stripped.endswith("_prompt"):
+        warnings.append("Prompt name should not end with '_prompt'; MCP prompts are already prompts.")
+
+    return warnings
+
+
 _VOLATILE_TOKENS = {"timestamp", "date", "version", "token", "session"}
 _BARE_ID_PATTERN = re.compile(r"(?<![a-z_])\{id\}(?![a-z_])")
 
