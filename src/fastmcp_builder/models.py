@@ -90,5 +90,10 @@ class UriStabilityReport(BaseModel):
     warnings: list[str] = Field(default_factory=list)
 
 
+class ToolNameReport(BaseModel):
+    passed: bool
+    warnings: list[str] = Field(default_factory=list)
+
+
 JsonObject = dict[str, Any]
 ControlPattern = Literal["model", "client", "user", "unknown"]

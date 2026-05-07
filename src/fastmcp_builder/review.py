@@ -160,6 +160,35 @@ def review_fastmcp_manifest_data(manifest: dict[str, Any]) -> ManifestReview:
     )
 
 
+_SNAKE_CASE_PATTERN = re.compile(r"^[a-z][a-z0-9_]*$")
+_GENERIC_TOOL_NAMES = {"tool", "mcp", "fastmcp", "handler", "run", "execute", "process"}
+
+
+def check_tool_name_format(name: str) -> list[str]:
+    warnings: list[str] = []
+    stripped = name.strip()
+
+    if not stripped:
+        warnings.append("Tool name is empty.")
+        return warnings
+
+    if not _SNAKE_CASE_PATTERN.match(stripped):
+        warnings.append("Tool name must be snake_case: lowercase letters, digits, and underscores only, starting with a letter.")
+
+    if len(stripped) < 3:
+        warnings.append("Tool name is too short; use at least 3 characters.")
+    elif len(stripped) > 64:
+        warnings.append("Tool name is too long; keep it under 64 characters.")
+
+    if stripped in _GENERIC_TOOL_NAMES:
+        warnings.append(f"'{stripped}' is too generic; use a name that describes what the tool does.")
+
+    if stripped.endswith("_tool"):
+        warnings.append("Tool name should not end with '_tool'; MCP tools are already tools.")
+
+    return warnings
+
+
 _VOLATILE_TOKENS = {"timestamp", "date", "version", "token", "session"}
 _BARE_ID_PATTERN = re.compile(r"(?<![a-z_])\{id\}(?![a-z_])")
 
