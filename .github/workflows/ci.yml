@@ -1,30 +1,16 @@
 name: CI
 
 on:
-  pull_request:
   push:
+    branches: [main]
+  pull_request:
     branches: [main]
 
 jobs:
   test:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v5
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-
-      - name: Install dependencies
-        run: uv sync
-
-      - name: Check FastMCP version
-        run: uv run fastmcp version
-
-      - name: Run tests
-        run: uv run pytest
+      - uses: astral-sh/setup-uv@v4
+      - run: uv sync
+      - run: uv run pytest
