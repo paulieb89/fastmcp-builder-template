@@ -5,7 +5,7 @@ description = "Local-first FastMCP v3 builder scaffold for designing and reviewi
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "fastmcp==3.0.0",
+    "fastmcp==3.2.4",
     "pydantic>=2.7,<3",
 ]
 
