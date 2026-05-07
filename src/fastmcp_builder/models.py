@@ -85,5 +85,10 @@ class ErrorDesignReport(BaseModel):
     notes: list[str] = Field(default_factory=list)
 
 
+class UriStabilityReport(BaseModel):
+    passed: bool
+    warnings: list[str] = Field(default_factory=list)
+
+
 JsonObject = dict[str, Any]
 ControlPattern = Literal["model", "client", "user", "unknown"]

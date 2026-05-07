@@ -160,6 +160,40 @@ def review_fastmcp_manifest_data(manifest: dict[str, Any]) -> ManifestReview:
     )
 
 
+_VOLATILE_TOKENS = {"timestamp", "date", "version", "token", "session"}
+_BARE_ID_PATTERN = re.compile(r"(?<![a-z_])\{id\}(?![a-z_])")
+
+
+def check_uri_stability(uri_pattern: str) -> list[str]:
+    warnings: list[str] = []
+    stripped = uri_pattern.strip()
+
+    if not stripped:
+        warnings.append("URI pattern is empty.")
+        return warnings
+
+    if stripped.startswith("http://") or stripped.startswith("https://"):
+        warnings.append("Live HTTP/HTTPS URLs are not stable MCP resource URIs; use a custom scheme.")
+
+    if "?" in stripped:
+        warnings.append("URI contains a query string; query parameters make URIs unstable.")
+
+    template_tokens = set(re.findall(r"\{([^}]+)\}", stripped))
+    volatile_found = template_tokens & _VOLATILE_TOKENS
+    if volatile_found:
+        warnings.append(
+            f"URI contains volatile template tokens: {sorted(volatile_found)}. "
+            "These will change across requests or deployments."
+        )
+
+    if _BARE_ID_PATTERN.search(stripped):
+        warnings.append(
+            "URI contains a bare {id} segment. Prefer a descriptive token like {slug} or {name}."
+        )
+
+    return warnings
+
+
 def description_quality(name: str, description: str, schema: dict[str, Any]) -> list[str]:
     warnings: list[str] = []
     normalized = description.strip().lower()
