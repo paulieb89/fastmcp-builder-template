@@ -48,6 +48,10 @@ Expected result: `fastmcp-builder` appears as a project-scoped MCP server. Claud
 - Prompts are user-triggered workflows.
 - FastMCP v3 exposes those primitives with `@mcp.tool`, `@mcp.resource`, and `@mcp.prompt`.
 
+## Project Workflow
+
+This repo uses a small branch-and-PR workflow for template changes. See [docs/git-workflow.md](docs/git-workflow.md) for the current `main` versus polish branch state and merge/tag steps.
+
 ## Included Builder Capabilities
 
 - Classify whether a use case should be a tool, resource, or prompt.
