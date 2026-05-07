@@ -1,0 +1,7 @@
+{
+  "source": {
+    "path": "src/fastmcp_builder/server.py",
+    "entrypoint": "mcp"
+  },
+  "transport": "stdio"
+}

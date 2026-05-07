@@ -1,0 +1,31 @@
+{
+  "name": "fastmcp_builder",
+  "primitives": [
+    {
+      "kind": "tool",
+      "name": "classify_mcp_primitive",
+      "description": "Classify a proposed MCP use case as a tool, resource, or prompt.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "use_case": {
+            "type": "string"
+          }
+        },
+        "required": ["use_case"]
+      }
+    },
+    {
+      "kind": "resource",
+      "name": "docs_index",
+      "description": "Expose the list of local curated learning notes for the client to read.",
+      "uri": "fastmcp-builder://docs"
+    },
+    {
+      "kind": "prompt",
+      "name": "design_fastmcp_server",
+      "description": "Start a reusable workflow for designing a local FastMCP server.",
+      "arguments": ["project_goal", "primitives", "constraints"]
+    }
+  ]
+}
