@@ -8,6 +8,7 @@ from fastmcp_builder.docs import list_examples, list_markdown_docs, read_doc, re
 from fastmcp_builder.models import (
     DescriptionQualityReport,
     ErrorDesignReport,
+    ParameterSpec,
     PrimitiveClassification,
     PrimitiveKind,
     PromptContract,
@@ -65,12 +66,12 @@ def suggest_tool_contract(capability_description: str) -> ToolContract:
         name=_name_from_text(capability_description, "tool"),
         description=f"Use this tool to {capability_description.strip().rstrip('.')}.",
         parameters=[
-            {
-                "name": "request",
-                "type": "string",
-                "description": "Plain-English request or source material to process.",
-                "required": True,
-            }
+            ParameterSpec(
+                name="request",
+                type="string",
+                description="Plain-English request or source material to process.",
+                required=True,
+            )
         ],
         return_shape={"summary": "string", "recommendations": "list[string]", "warnings": "list[string]"},
         error_cases=[
@@ -98,18 +99,18 @@ def suggest_prompt_contract(workflow_description: str) -> PromptContract:
     return PromptContract(
         name=_name_from_text(workflow_description, "workflow"),
         arguments=[
-            {
-                "name": "goal",
-                "type": "string",
-                "description": "The outcome the user wants from the workflow.",
-                "required": True,
-            },
-            {
-                "name": "constraints",
-                "type": "string",
-                "description": "Local boundaries, exclusions, and implementation preferences.",
-                "required": False,
-            },
+            ParameterSpec(
+                name="goal",
+                type="string",
+                description="The outcome the user wants from the workflow.",
+                required=True,
+            ),
+            ParameterSpec(
+                name="constraints",
+                type="string",
+                description="Local boundaries, exclusions, and implementation preferences.",
+                required=False,
+            ),
         ],
         template_outline=[
             "Restate the goal and constraints.",
