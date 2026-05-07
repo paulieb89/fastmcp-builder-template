@@ -18,6 +18,29 @@ uv run fastmcp run src/fastmcp_builder/server.py:mcp
 
 Claude Code can discover this project server from the root `.mcp.json`.
 
+## Using With Claude Code
+
+Open Claude Code from the repository root after installing dependencies:
+
+```bash
+uv sync
+claude
+```
+
+The root `.mcp.json` configures a project-scoped MCP server named `fastmcp-builder`:
+
+```bash
+uv run fastmcp run src/fastmcp_builder/server.py:mcp
+```
+
+In Claude Code, run:
+
+```text
+/mcp
+```
+
+Expected result: `fastmcp-builder` appears as a project-scoped MCP server. Claude can then use the builder tools, resources, and prompts from this repository while working on the project.
+
 ## What This Template Teaches
 
 - Tools are model-controlled capabilities.
@@ -36,3 +59,24 @@ Claude Code can discover this project server from the root `.mcp.json`.
 ## Local Boundaries
 
 This template intentionally excludes runtime network calls, arbitrary shell execution, databases, auth, hosted UIs, crawlers, scrapers, and background jobs.
+
+## Fresh-Clone Verification
+
+Before publishing or tagging a release, verify the template from a clean clone:
+
+```bash
+git clone https://github.com/paulieb89/fastmcp-builder-template.git /tmp/fastmcp-builder-template-check
+cd /tmp/fastmcp-builder-template-check
+uv sync
+uv run fastmcp version
+uv run pytest
+uv run fastmcp run src/fastmcp_builder/server.py:mcp
+```
+
+Then open Claude Code from the repository root and run:
+
+```text
+/mcp
+```
+
+Expected result: `fastmcp-builder` appears as a project-scoped MCP server.
