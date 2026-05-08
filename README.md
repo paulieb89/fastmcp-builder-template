@@ -47,6 +47,8 @@ In Claude Code, run:
 
 Expected result: `fastmcp-builder` appears as a project-scoped MCP server. Claude can then use the builder tools, resources, and prompts from this repository while working on the project.
 
+You can also use this repo as a cross-project MCP advisor by pointing another project's `.mcp.json` at this server with `uv --directory`; see [docs/claude-code-workflow.md](docs/claude-code-workflow.md).
+
 ## What This Template Teaches
 
 - Tools are model-controlled capabilities.
