@@ -39,3 +39,13 @@ For changes affecting project startup or MCP wiring, also run:
 uv run fastmcp version
 uv run fastmcp run src/fastmcp_builder/server.py:mcp
 ```
+
+## Branch Policy
+
+All changes — including docs and config — require a feature branch and PR:
+
+```bash
+git checkout -b feat/<short-description>
+```
+
+Open a PR to `main` when tests pass. Merge to `main` after approval. No direct commits to `main`.

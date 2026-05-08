@@ -44,10 +44,10 @@ When loading any skill, check the observation log for OPEN observations tagged t
 
 ## Branch policy
 
-Work on a feature branch for every non-trivial change:
+All changes — including docs and config — require a feature branch and PR:
 
 ```bash
 git checkout -b feat/<short-description>
 ```
 
-Open a PR to `main` when tests pass. Direct commits to `main` are only for docs and config.
+Open a PR to `main` when tests pass. Merge to `main` after approval. No direct commits to `main`.
