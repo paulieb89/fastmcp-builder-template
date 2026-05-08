@@ -4,9 +4,12 @@ All notable changes to this template will be documented in this file.
 
 ## Unreleased
 
+## 0.2.0
+
 - Add `check_uri_stability` tool — deterministic URI stability checks.
 - Add `check_tool_name_format` tool — snake_case, length, generic name validation.
 - Add `check_prompt_name_format` tool — snake_case, length, `_prompt` suffix validation.
+- Add `raw-mcp-to-fastmcp-v3` translation doc — maps course material to standalone FastMCP v3.
 - Bump FastMCP dependency to 3.2.4.
 - Add GitHub Actions CI workflow (`uv sync` + `uv run pytest` on push/PR).
 - Add project-scoped skills: `fastmcp-build-loop`, `fastmcp-design-review`,
