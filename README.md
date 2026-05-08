@@ -14,7 +14,6 @@ A local-first FastMCP v3 starter template for building, reviewing, and teaching 
 ```bash
 uv sync
 uv run fastmcp version
-uv run pytest
 ```
 
 Run the server locally with STDIO:
@@ -54,10 +53,6 @@ Expected result: `fastmcp-builder` appears as a project-scoped MCP server. Claud
 - Resources are client/app-controlled data.
 - Prompts are user-triggered workflows.
 - FastMCP v3 exposes those primitives with `@mcp.tool`, `@mcp.resource`, and `@mcp.prompt`.
-
-## Project Workflow
-
-This repo uses a small branch-and-PR workflow for template changes. See [docs/git-workflow.md](docs/git-workflow.md) for the current `main` versus polish branch state and merge/tag steps.
 
 ## Included Builder Capabilities
 
@@ -101,23 +96,6 @@ Available as MCP resources at `fastmcp-builder://docs/{slug}`:
 
 This template intentionally excludes runtime network calls, arbitrary shell execution, databases, auth, hosted UIs, crawlers, scrapers, and background jobs.
 
-## Fresh-Clone Verification
+## Contributing
 
-Before publishing or tagging a release, verify the template from a clean clone:
-
-```bash
-git clone https://github.com/paulieb89/fastmcp-builder-template.git /tmp/fastmcp-builder-template-check
-cd /tmp/fastmcp-builder-template-check
-uv sync
-uv run fastmcp version
-uv run pytest
-uv run fastmcp run src/fastmcp_builder/server.py:mcp
-```
-
-Then open Claude Code from the repository root and run:
-
-```text
-/mcp
-```
-
-Expected result: `fastmcp-builder` appears as a project-scoped MCP server.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, scope rules, and PR guidelines.

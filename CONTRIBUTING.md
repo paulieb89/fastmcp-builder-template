@@ -35,3 +35,24 @@ Keep pull requests small and explain which MCP primitive boundary the change aff
 ## CI
 
 GitHub Actions runs `uv sync` and `uv run pytest` on every push and pull request to `main`. A PR cannot be considered ready until the CI badge is green. The workflow is at [.github/workflows/ci.yml](.github/workflows/ci.yml).
+
+## Release Verification
+
+Before publishing or tagging a release, verify the template from a clean clone:
+
+```bash
+git clone https://github.com/paulieb89/fastmcp-builder-template.git /tmp/fastmcp-builder-template-check
+cd /tmp/fastmcp-builder-template-check
+uv sync
+uv run fastmcp version
+uv run pytest
+uv run fastmcp run src/fastmcp_builder/server.py:mcp
+```
+
+Then open Claude Code from the repository root and run:
+
+```text
+/mcp
+```
+
+Expected result: `fastmcp-builder` appears as a project-scoped MCP server.
