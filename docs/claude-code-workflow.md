@@ -17,6 +17,7 @@ Recommended working pattern:
 3. Plan the smallest useful change.
 4. Add tests with the code.
 5. Run `uv run pytest`.
+6. For resources: verify `mime_type` is declared on every `@mcp.resource` decorator.
 
 Use `.claude/skills` for reusable teaching instructions and `.claude/commands` for explicit slash-command workflows.
 

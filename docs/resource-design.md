@@ -11,7 +11,7 @@ Good resources:
 Design checklist:
 
 - Use stable URI patterns.
-- Return a clear MIME type when the SDK supports it.
+- Always declare `mime_type` on `@mcp.resource` (e.g. `"application/json"` or `"text/markdown"`). Without it the client has no hint for deserialization.
 - Avoid mutation.
 - Avoid runtime network calls.
 - Prevent path traversal for file-backed resources.
