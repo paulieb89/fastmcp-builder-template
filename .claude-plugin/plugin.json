@@ -1,0 +1,13 @@
+{
+  "name": "fastmcp-builder",
+  "version": "0.3.0",
+  "description": "FastMCP server builder and advisor — teaches MCP primitive design, reviews server designs, and scaffolds local-first FastMCP servers.",
+  "author": {
+    "name": "paulieb89",
+    "email": "paulboucherat@gmail.com"
+  },
+  "homepage": "https://github.com/paulieb89/fastmcp-builder-template",
+  "repository": "https://github.com/paulieb89/fastmcp-builder-template",
+  "license": "MIT",
+  "keywords": ["fastmcp", "mcp", "claude-code", "server-builder"]
+}
