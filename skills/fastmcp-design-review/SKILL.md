@@ -1,22 +1,96 @@
 ---
 name: fastmcp-design-review
-description: Audit a FastMCP server or manifest for correct tool/resource/prompt boundaries, local-first scope, and test coverage. Use when the user says "review my MCP server", "check my FastMCP design", or shares an mcp.json or server module for critique.
+description: Audit a FastMCP server or manifest for correct tool/resource/prompt boundaries, local-first scope, and test coverage. Use when the user says "review my MCP server", "check my FastMCP design", "audit this server's design", or points at a repo / server module / manifest for critique.
 ---
 
 # FastMCP Design Review
 
-Use this skill when reviewing a proposed FastMCP server.
+Use this skill when reviewing a FastMCP server. The review has three layers:
 
-If the user provides a manifest (e.g., the structured capability listing from a `plugin.json` or a hand-written spec), call the `review_fastmcp_manifest` tool first — it returns deterministic findings keyed to manifest paths. Then layer the checks below on top.
+1. **Build the manifest from source** (grep + read).
+2. **Run deterministic checks** via the `review_fastmcp_manifest` tool.
+3. **Layer judgment checks** on top (the checklist below).
 
-Check:
+Never ask the user to construct a manifest by hand. The skill does it.
 
-- Tools are model-controlled capabilities.
-- Resources are client/app-controlled data.
-- Prompts are user-triggered workflows.
-- The server uses `from fastmcp import FastMCP`.
-- The server exposes a real `mcp` object.
-- Local-first operation remains the default.
+---
+
+## Layer 1 — Build the manifest from source
+
+Locate the server module(s) and extract primitives:
+
+```bash
+# Find the FastMCP entry point.
+grep -rn "FastMCP(" --include="*.py" <repo-path> | head -5
+
+# Enumerate decorated capabilities.
+grep -rnE "^@(mcp\.tool|mcp\.resource|mcp\.prompt)" --include="*.py" <repo-path>
+```
+
+For each match, read the surrounding function and its docstring. Extract:
+
+| Decorator | Manifest entry |
+|---|---|
+| `@mcp.tool` | `{"kind": "tool", "name": <fn name or `name=` kwarg>, "description": <docstring or `description=` kwarg>, "input_schema": <derived from type hints>}` |
+| `@mcp.resource("uri://...")` | `{"kind": "resource", "name": <`name=` kwarg or fn name>, "description": <`description=` kwarg or docstring>, "uri_template": <positional arg>}` |
+| `@mcp.prompt` | `{"kind": "prompt", "name": <fn name>, "description": <docstring>, "arguments": <derived from signature>}` |
+
+Field-name notes (the reviewer accepts all of these — pick whichever is easiest to extract):
+
+- Tool input schema: `parameters` / `inputSchema` / `input_schema`
+- Resource URI: `uri` / `uriTemplate` / `uri_template`
+
+Combine all primitives into a single list and wrap:
+
+```json
+{
+  "name": "<snake_case server slug>",
+  "primitives": [ ... ]
+}
+```
+
+---
+
+## Layer 2 — Run the deterministic review
+
+Pass the manifest to `review_fastmcp_manifest`. Report any `high` findings first, then `medium`, then `low`. Each finding includes a JSON path — quote it verbatim so the user can locate the problem.
+
+If the review surfaces findings about the **manifest shape itself** (missing fields, wrong key names), that's a manifest-construction error in this skill — fix it and re-run, don't report it back to the user.
+
+---
+
+## Layer 3 — Judgment checks (human review)
+
+Apply these on top of the deterministic findings:
+
+- Tools are model-controlled capabilities (the model decides when to call).
+- Resources are client/app-controlled data (the host decides when to fetch).
+- Prompts are user-triggered workflows (the user picks them from a menu).
+- The server uses `from fastmcp import FastMCP` (not the deprecated `mcp.server.fastmcp` path).
+- The server exposes a real `mcp` object at module top-level.
+- Local-first operation remains the default. Network calls, if any, are explicit and documented.
 - No arbitrary shell execution tools are added.
-- No runtime network calls, databases, auth, crawlers, hosted UI, or background jobs are added.
-- Tests cover the behavior being introduced.
+- No databases, auth flows, crawlers, hosted UI, or background jobs are added.
+- Tests cover the behavior being introduced — both happy path and at least one failure mode per tool.
+
+Anti-patterns to flag specifically:
+
+- A tool that returns `{"error": "..."}` on failure instead of raising — silent failure conversion.
+- A resource URI with volatile tokens (`{timestamp}`, `{session_id}`, query strings).
+- A tool description under ~30 characters or one that doesn't mention when to use the tool.
+- A `@mcp.resource` without `mime_type` declared.
+- A server that mixes proxy/aggregator behavior (`create_proxy`, `mcp.mount`) with locally-defined primitives — pick one architecture.
+
+---
+
+## Report format
+
+Structure findings as:
+
+1. **Summary line** — pass/fail and counts by severity.
+2. **High-severity findings** (deterministic + judgment, grouped).
+3. **Medium-severity findings**.
+4. **Low-severity findings**.
+5. **Recommended next PRs**, ordered by impact, each a single small change.
+
+Quote file paths with line numbers when pointing at specific code (e.g. `server.py:142`).
