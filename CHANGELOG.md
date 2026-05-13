@@ -4,6 +4,23 @@ All notable changes to this template will be documented in this file.
 
 ## Unreleased
 
+- `review_fastmcp_manifest` now accepts `inputSchema` and `input_schema` as
+  aliases for the tool input-schema field (was: only `parameters`). Real
+  FastMCP servers emit `inputSchema` at runtime per the MCP wire format;
+  rejecting it produced false-positive `tool.missing_parameters` findings.
+- `review_fastmcp_manifest` no longer enforces snake_case on resource names.
+  In FastMCP, `Resource.name` is a human-readable label and the URI is the
+  identifier — applying tool/prompt naming rules to resources produced
+  false-positive `primitive.name_format` findings on display-style labels
+  like "GOV.UK content — metadata header". Tools and prompts still require
+  snake_case names.
+- A primitive missing the `name` field entirely is now a HIGH-severity
+  `primitive.missing_name` finding (was conflated with the medium-severity
+  format-violation case).
+- Adds a marketplace manifest at `.claude-plugin/marketplace.json` so the
+  repo can be added from Claude Code's Marketplaces tab as well as the
+  Plugins tab.
+
 ## 0.3.0
 
 - Wire the repository as an installable Claude Code plugin. Skills and commands

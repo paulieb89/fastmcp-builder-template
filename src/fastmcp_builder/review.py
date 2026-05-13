@@ -93,7 +93,19 @@ def review_fastmcp_manifest_data(manifest: dict[str, Any]) -> ManifestReview:
                 )
             )
 
-        if not isinstance(primitive_name, str) or not _NAME_PATTERN.match(primitive_name):
+        # Resources use the URI as their stable identifier; `name` is a
+        # human-readable label per FastMCP convention. Only enforce snake_case
+        # on tools and prompts, where the name IS the identifier the model sees.
+        if not isinstance(primitive_name, str):
+            findings.append(
+                ReviewFinding(
+                    severity=Severity.HIGH,
+                    code="primitive.missing_name",
+                    message="Primitive must declare a name.",
+                    path=f"{path}.name",
+                )
+            )
+        elif kind != "resource" and not _NAME_PATTERN.match(primitive_name):
             findings.append(
                 ReviewFinding(
                     severity=Severity.MEDIUM,
@@ -124,12 +136,18 @@ def review_fastmcp_manifest_data(manifest: dict[str, Any]) -> ManifestReview:
                 )
             )
 
-        if kind == "tool" and "parameters" not in primitive:
+        # Accept any common spelling for the input schema field:
+        # `parameters` (this reviewer's original convention),
+        # `inputSchema` (MCP wire format / FastMCP runtime output),
+        # `input_schema` (Python snake_case convention).
+        if kind == "tool" and not any(
+            key in primitive for key in ("parameters", "inputSchema", "input_schema")
+        ):
             findings.append(
                 ReviewFinding(
                     severity=Severity.MEDIUM,
                     code="tool.missing_parameters",
-                    message="Tools should declare parameters, even when the object is empty.",
+                    message="Tools should declare an input schema (parameters / inputSchema / input_schema), even when the object is empty.",
                     path=f"{path}.parameters",
                 )
             )
