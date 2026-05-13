@@ -134,6 +134,65 @@ def test_tool_and_prompt_names_still_require_snake_case():
     }
 
 
+def test_resource_accepts_uriTemplate_alias():
+    """Templated resources use uriTemplate in MCP wire format, not uri."""
+    result = review_fastmcp_manifest_data(
+        {
+            "name": "templated_resource_server",
+            "primitives": [
+                {
+                    "kind": "resource",
+                    "name": "User profile by slug",
+                    "description": "Read a user profile by URL slug as JSON.",
+                    "uriTemplate": "example://users/{slug}",
+                }
+            ],
+        }
+    )
+
+    assert result.passed is True
+    assert not any(f.code == "resource.missing_uri" for f in result.findings)
+
+
+def test_resource_accepts_uri_template_snake_case_alias():
+    """Python-side manifest authors often use uri_template (snake_case)."""
+    result = review_fastmcp_manifest_data(
+        {
+            "name": "py_authored_resource_server",
+            "primitives": [
+                {
+                    "kind": "resource",
+                    "name": "User profile by slug",
+                    "description": "Read a user profile by URL slug as JSON.",
+                    "uri_template": "example://users/{slug}",
+                }
+            ],
+        }
+    )
+
+    assert result.passed is True
+    assert not any(f.code == "resource.missing_uri" for f in result.findings)
+
+
+def test_resource_with_no_uri_still_fails():
+    """Removing all three aliases must still fail — this is a structural error."""
+    result = review_fastmcp_manifest_data(
+        {
+            "name": "broken_resource_server",
+            "primitives": [
+                {
+                    "kind": "resource",
+                    "name": "Some resource",
+                    "description": "A resource with no URI declared at all.",
+                }
+            ],
+        }
+    )
+
+    assert result.passed is False
+    assert any(f.code == "resource.missing_uri" and f.severity == "high" for f in result.findings)
+
+
 def test_missing_name_is_high_severity():
     """A primitive with no name at all is a structural error, not just a format issue."""
     result = review_fastmcp_manifest_data(

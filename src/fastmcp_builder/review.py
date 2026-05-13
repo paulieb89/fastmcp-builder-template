@@ -152,12 +152,18 @@ def review_fastmcp_manifest_data(manifest: dict[str, Any]) -> ManifestReview:
                 )
             )
 
-        if kind == "resource" and "uri" not in primitive:
+        # Accept any common spelling for the resource URI field:
+        # `uri` (static resources), `uriTemplate` (MCP wire format for
+        # templated resources like wdtk://users/{slug}), and
+        # `uri_template` (Python snake_case convention).
+        if kind == "resource" and not any(
+            key in primitive for key in ("uri", "uriTemplate", "uri_template")
+        ):
             findings.append(
                 ReviewFinding(
                     severity=Severity.HIGH,
                     code="resource.missing_uri",
-                    message="Resources must declare a stable URI or URI pattern.",
+                    message="Resources must declare a stable URI or URI pattern (uri / uriTemplate / uri_template).",
                     path=f"{path}.uri",
                 )
             )
