@@ -53,6 +53,16 @@ class SilentErrorReport(BaseModel):
     findings: list[ReviewFinding] = Field(default_factory=list)
 
 
+class CheckReport(BaseModel):
+    """Generic source-check report shape — used by new spec-grounded checks.
+
+    Same shape as SilentErrorReport and ManifestReview (passed + findings list),
+    so the design-review skill can merge findings uniformly.
+    """
+    passed: bool
+    findings: list[ReviewFinding] = Field(default_factory=list)
+
+
 class ParameterSpec(BaseModel):
     name: str
     type: str

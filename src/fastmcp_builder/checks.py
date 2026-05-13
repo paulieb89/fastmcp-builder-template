@@ -10,7 +10,7 @@ from __future__ import annotations
 import ast
 
 from .extract import iter_mcp_decorated_functions, load_ast
-from .models import ReviewFinding, Severity, SilentErrorReport
+from .models import CheckReport, ReviewFinding, Severity, SilentErrorReport
 
 
 PATTERN_ERROR_DICT = 'dict with "error" key'
@@ -126,3 +126,39 @@ def _classify_indirect_error(
 
 def _looks_like_error_prefix(text: str) -> bool:
     return text.lstrip().lower().startswith("error")
+
+
+def check_resource_mime_type_declared(path: str) -> CheckReport:
+    """Scan source for @mcp.resource decorators that don't declare a mime_type.
+
+    Spec source: FastMCP framework — `servers/resources.md`. The `mime_type=`
+    kwarg lets the client display the resource correctly without inferring
+    from the return type. Severity MEDIUM (FastMCP-recommended, not
+    MCP-mandatory).
+    """
+    tree = load_ast(path)
+
+    findings: list[ReviewFinding] = []
+    for node, kind, decorator in iter_mcp_decorated_functions(tree):
+        if kind != "resource":
+            continue
+        has_mime = False
+        if isinstance(decorator, ast.Call):
+            has_mime = any(kw.arg == "mime_type" for kw in decorator.keywords)
+        if not has_mime:
+            findings.append(
+                ReviewFinding(
+                    severity=Severity.MEDIUM,
+                    code="resource.missing_mime_type",
+                    message=(
+                        f"Resource '{node.name}' has no mime_type= kwarg on its "
+                        f"@mcp.resource decorator. FastMCP will infer one from "
+                        f"the return type, which is brittle for non-string content."
+                    ),
+                    path=f"$.primitives.{node.name}",
+                    spec_source="FastMCP",
+                    spec_section="servers/resources.md#mime_type",
+                )
+            )
+
+    return CheckReport(passed=not findings, findings=findings)

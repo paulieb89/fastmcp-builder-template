@@ -250,7 +250,7 @@ output on wdtk visibly groups by spec source.
 
 ---
 
-## check_resource_mime_type_declared
+## check_resource_mime_type_declared [done]
 
 **Spec source:** FastMCP — `https://gofastmcp.com/servers/resources.md`
 (the `mime_type=` kwarg is the documented way to declare a content type).

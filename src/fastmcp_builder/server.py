@@ -4,10 +4,14 @@ from typing import Any
 
 from fastmcp import FastMCP
 
-from fastmcp_builder.checks import check_silent_error_returns as _check_silent_error_returns
+from fastmcp_builder.checks import (
+    check_resource_mime_type_declared as _check_resource_mime_type_declared,
+    check_silent_error_returns as _check_silent_error_returns,
+)
 from fastmcp_builder.docs import list_examples, list_markdown_docs, read_doc, read_example
 from fastmcp_builder.extract import extract_manifest_from_source as _extract_manifest_from_source
 from fastmcp_builder.models import (
+    CheckReport,
     DescriptionQualityReport,
     ErrorDesignReport,
     ManifestReview,
@@ -78,6 +82,20 @@ def extract_manifest_from_source(path: str) -> dict[str, Any]:
     Does not execute the source.
     """
     return _extract_manifest_from_source(path)
+
+
+@mcp.tool
+def check_resource_mime_type_declared(path: str) -> CheckReport:
+    """AST-scan a FastMCP server source for `@mcp.resource` decorators that
+    don't declare a `mime_type=` kwarg.
+
+    Spec source: FastMCP — `servers/resources.md`. Severity MEDIUM
+    (FastMCP-recommended, not MCP-mandatory). Without `mime_type`, FastMCP
+    infers from the return type — fine for plain strings, brittle otherwise.
+
+    Findings carry `spec_source="FastMCP"` and `spec_section="servers/resources.md#mime_type"`.
+    """
+    return _check_resource_mime_type_declared(path)
 
 
 @mcp.tool
