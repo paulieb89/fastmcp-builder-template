@@ -1,6 +1,6 @@
 ---
 name: fastmcp-scaffold-author
-description: Author small local-first FastMCP server scaffolds with tests.
+description: Scaffold a new FastMCP server from scratch — server module, mcp object, first tool/resource/prompt, and pytest setup. Use when the user says "build an MCP server for X", "start a new FastMCP project", or needs a local-first STDIO server skeleton.
 ---
 
 # FastMCP Scaffold Author

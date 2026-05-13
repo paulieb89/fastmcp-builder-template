@@ -1,11 +1,13 @@
 ---
 name: fastmcp-design-review
-description: Review FastMCP server designs for primitive boundaries, local-first scope, and deterministic tests.
+description: Audit a FastMCP server or manifest for correct tool/resource/prompt boundaries, local-first scope, and test coverage. Use when the user says "review my MCP server", "check my FastMCP design", or shares an mcp.json or server module for critique.
 ---
 
 # FastMCP Design Review
 
 Use this skill when reviewing a proposed FastMCP server.
+
+If the user provides a manifest (e.g., the structured capability listing from a `plugin.json` or a hand-written spec), call the `review_fastmcp_manifest` tool first — it returns deterministic findings keyed to manifest paths. Then layer the checks below on top.
 
 Check:
 
