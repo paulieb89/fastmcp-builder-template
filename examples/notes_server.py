@@ -59,14 +59,14 @@ def _safe_note_path(name: str) -> Path:
 # ---------------------------------------------------------------------------
 
 
-@mcp.resource("notes://index")
+@mcp.resource("notes://index", mime_type="text/plain")
 def notes_index() -> str:
     """List all available notes by name (without the .md extension)."""
     names = sorted(p.stem for p in NOTES_DIR.glob("*.md") if p.is_file())
     return "\n".join(names) if names else "(no notes found)"
 
 
-@mcp.resource("notes://{name}")
+@mcp.resource("notes://{name}", mime_type="text/markdown")
 def note_by_name(name: str) -> str:
     """Read a markdown note by name (omit the .md extension)."""
     return _safe_note_path(name).read_text(encoding="utf-8")
@@ -77,7 +77,14 @@ def note_by_name(name: str) -> str:
 # ---------------------------------------------------------------------------
 
 
-@mcp.tool
+@mcp.tool(
+    annotations={
+        "readOnlyHint": True,
+        "destructiveHint": False,
+        "idempotentHint": True,
+        "openWorldHint": False,
+    },
+)
 def summarise_note(name: str) -> str:
     """Return a compact summary of a note: its headings and opening paragraph.
 

@@ -3,7 +3,7 @@ from __future__ import annotations
 import re
 from typing import Any
 
-from .models import ManifestReview, ReviewFinding, Severity
+from .models import ManifestReview, ReviewFinding, Severity, SpecSource
 
 
 _NAME_PATTERN = re.compile(r"^[a-z][a-z0-9_]{2,63}$")
@@ -15,7 +15,7 @@ _GENERIC_NAME_WORDS = {"tool", "resource", "prompt", "mcp", "fastmcp"}
 # Tuple is (spec_source, spec_section). `spec_source="opinion"` marks findings
 # that aren't grounded in the MCP/FastMCP spec — those stay callable but the
 # design-review skill doesn't auto-fire them.
-_CITATIONS: dict[str, tuple[str, str | None]] = {
+_CITATIONS: dict[str, tuple[SpecSource, str | None]] = {
     "manifest.not_object": ("MCP", "server/initialize"),
     "manifest.missing_name": ("MCP", "server/initialize"),
     "manifest.missing_primitives": ("MCP", "server/capabilities"),
@@ -41,10 +41,12 @@ def _finding(
 ) -> ReviewFinding:
     """Construct a ReviewFinding, looking up the spec citation by code.
 
-    Dynamic codes like `manifest.missing_<key>` fall back to the `manifest.missing_name`
-    citation when not exact-matched (same spec section applies).
+    Dynamic codes like `manifest.missing_<key>` fall back to the prefix lookup
+    (same spec section applies).
     """
-    source, section = _CITATIONS.get(code, _CITATIONS.get(code.rsplit("_", 1)[0], (None, None)))
+    citation = _CITATIONS.get(code) or _CITATIONS.get(code.rsplit("_", 1)[0])
+    source: SpecSource | None = citation[0] if citation else None
+    section: str | None = citation[1] if citation else None
     return ReviewFinding(
         severity=severity,
         code=code,

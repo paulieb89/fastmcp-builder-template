@@ -12,6 +12,7 @@ dependencies = [
 [dependency-groups]
 dev = [
     "pytest>=8.0",
+    "ruff>=0.6",
 ]
 
 [build-system]
@@ -24,3 +25,19 @@ packages = ["src/fastmcp_builder"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src", "examples"]
+
+[tool.ruff]
+target-version = "py311"
+
+[tool.ruff.lint]
+# Minimal ruleset focused on catching the failure mode that slipped through
+# this round: dead/unreachable code, unused imports, redefinition.
+# F841 = local assigned but never used
+# F811 = redefinition of unused names
+# F401 = imported but unused
+# E712 = comparison-to-True/False
+select = ["F", "E"]
+ignore = [
+    "E501",  # line length — formatter's job, not the linter's
+    "E731",  # lambda assignment — not relevant here
+]
