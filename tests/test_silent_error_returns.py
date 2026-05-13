@@ -54,6 +54,10 @@ def create_item(name: str) -> dict:
     assert finding.code == "tool.silent_error_return"
     assert finding.path == "$.primitives.create_item"
     assert PATTERN_ERROR_DICT in finding.message
+    # Citation: FastMCP framework rule ("raise, don't return") from the
+    # tools docs page. Severity HIGH because FastMCP docs are explicit.
+    assert finding.spec_source == "FastMCP"
+    assert finding.spec_section and "tools" in finding.spec_section.lower()
 
 
 def test_tool_returning_error_string_is_flagged(tmp_path: Path) -> None:

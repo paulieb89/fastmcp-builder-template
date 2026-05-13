@@ -54,6 +54,8 @@ def check_silent_error_returns(path: str) -> SilentErrorReport:
                         f"at line {return_stmt.lineno} instead of raising."
                     ),
                     path=f"$.primitives.{node.name}",
+                    spec_source="FastMCP",
+                    spec_section="servers/tools.md#error-handling",
                 )
             )
 

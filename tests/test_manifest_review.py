@@ -193,6 +193,40 @@ def test_resource_with_no_uri_still_fails():
     assert any(f.code == "resource.missing_uri" and f.severity == "high" for f in result.findings)
 
 
+def test_review_finding_accepts_spec_citation_fields():
+    """ReviewFinding gains optional spec_source / spec_section fields so the
+    design-review skill can group findings by their MCP/FastMCP citation."""
+    from fastmcp_builder.models import ReviewFinding, Severity
+
+    f = ReviewFinding(
+        severity=Severity.HIGH,
+        code="tool.silent_error_return",
+        message="Tool 'x' returns error sentinel at line 42 instead of raising.",
+        path="$.primitives.x",
+        spec_source="FastMCP",
+        spec_section="servers/tools.md#error-handling",
+    )
+
+    dumped = f.model_dump()
+    assert dumped["spec_source"] == "FastMCP"
+    assert dumped["spec_section"] == "servers/tools.md#error-handling"
+
+
+def test_review_finding_without_citation_still_valid():
+    """Backward compatibility: existing call sites that omit spec fields work."""
+    from fastmcp_builder.models import ReviewFinding, Severity
+
+    f = ReviewFinding(
+        severity=Severity.MEDIUM,
+        code="primitive.name_format",
+        message="...",
+        path="$.primitives[0].name",
+    )
+
+    assert f.spec_source is None
+    assert f.spec_section is None
+
+
 def test_missing_name_is_high_severity():
     """A primitive with no name at all is a structural error, not just a format issue."""
     result = review_fastmcp_manifest_data(
