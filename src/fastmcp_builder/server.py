@@ -8,6 +8,7 @@ from fastmcp_builder.checks import (
     check_prompt_argument_descriptions as _check_prompt_argument_descriptions,
     check_resource_mime_type_declared as _check_resource_mime_type_declared,
     check_silent_error_returns as _check_silent_error_returns,
+    check_tool_annotations_declared as _check_tool_annotations_declared,
 )
 from fastmcp_builder.docs import list_examples, list_markdown_docs, read_doc, read_example
 from fastmcp_builder.extract import extract_manifest_from_source as _extract_manifest_from_source
@@ -83,6 +84,17 @@ def extract_manifest_from_source(path: str) -> dict[str, Any]:
     Does not execute the source.
     """
     return _extract_manifest_from_source(path)
+
+
+@mcp.tool
+def check_tool_annotations_declared(path: str) -> CheckReport:
+    """AST-scan a FastMCP server source for `@mcp.tool` decorators that don't
+    declare the four standard ToolAnnotations hints (readOnlyHint,
+    destructiveHint, idempotentHint, openWorldHint).
+
+    Spec source: MCP — `ToolAnnotations` on Tool. Severity MEDIUM (MCP-recommended).
+    """
+    return _check_tool_annotations_declared(path)
 
 
 @mcp.tool

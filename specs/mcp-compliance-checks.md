@@ -303,7 +303,7 @@ its description state correctly.
 
 ---
 
-## check_tool_annotations_declared
+## check_tool_annotations_declared [done]
 
 **Spec source:** MCP — `ToolAnnotations` field on Tool
 (`modelcontextprotocol.io/specification/server/tools#annotations`).

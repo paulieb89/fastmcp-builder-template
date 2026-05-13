@@ -129,6 +129,83 @@ def _looks_like_error_prefix(text: str) -> bool:
     return text.lstrip().lower().startswith("error")
 
 
+_STANDARD_TOOL_HINTS = ("readOnlyHint", "destructiveHint", "idempotentHint", "openWorldHint")
+
+
+def check_tool_annotations_declared(path: str) -> CheckReport:
+    """Scan source for @mcp.tool decorators that don't declare the four
+    standard ToolAnnotations hints.
+
+    Spec source: MCP — `ToolAnnotations` field on Tool. Severity MEDIUM
+    (MCP-recommended, not MUST). Hosts use these hints to render the tool,
+    confirm destructive ones, etc.
+
+    Flags two cases:
+      - No `annotations=` kwarg at all.
+      - `annotations={...}` is a dict literal but missing one or more of the
+        four standard hints. (A non-literal value — e.g. a named constant —
+        is given the benefit of the doubt since we can't read it statically.)
+    """
+    tree = load_ast(path)
+
+    findings: list[ReviewFinding] = []
+    for node, kind, decorator in iter_mcp_decorated_functions(tree):
+        if kind != "tool":
+            continue
+
+        annotations_kw = None
+        if isinstance(decorator, ast.Call):
+            for kw in decorator.keywords:
+                if kw.arg == "annotations":
+                    annotations_kw = kw
+                    break
+
+        if annotations_kw is None:
+            findings.append(
+                ReviewFinding(
+                    severity=Severity.MEDIUM,
+                    code="tool.missing_annotations",
+                    message=(
+                        f"Tool '{node.name}' has no annotations= kwarg. "
+                        f"Declare ToolAnnotations hints (readOnlyHint, "
+                        f"destructiveHint, idempotentHint, openWorldHint) so "
+                        f"hosts can render and gate the tool correctly."
+                    ),
+                    path=f"$.primitives.{node.name}",
+                    spec_source="MCP",
+                    spec_section="server/tools#annotations",
+                )
+            )
+            continue
+
+        # If the value isn't a dict literal, we can't analyse it — pass.
+        if not isinstance(annotations_kw.value, ast.Dict):
+            continue
+
+        declared_hints = {
+            key.value
+            for key in annotations_kw.value.keys
+            if isinstance(key, ast.Constant) and isinstance(key.value, str)
+        }
+        missing = [hint for hint in _STANDARD_TOOL_HINTS if hint not in declared_hints]
+        if missing:
+            findings.append(
+                ReviewFinding(
+                    severity=Severity.MEDIUM,
+                    code="tool.missing_annotations",
+                    message=(
+                        f"Tool '{node.name}' annotations missing standard hints: "
+                        f"{', '.join(missing)}."
+                    ),
+                    path=f"$.primitives.{node.name}",
+                    spec_source="MCP",
+                    spec_section="server/tools#annotations",
+                )
+            )
+
+    return CheckReport(passed=not findings, findings=findings)
+
+
 def check_resource_mime_type_declared(path: str) -> CheckReport:
     """Scan source for @mcp.resource decorators that don't declare a mime_type.
 
