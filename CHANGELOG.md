@@ -4,6 +4,14 @@ All notable changes to this template will be documented in this file.
 
 ## Unreleased
 
+- New tool `extract_manifest_from_source(path)` parses a FastMCP server's
+  Python source via `ast` and returns a manifest dict ready for
+  `review_fastmcp_manifest`. Replaces the previous manual grep-and-reshape
+  workflow in the `fastmcp-design-review` skill — point the tool at a
+  server module and the manifest comes back deterministically. Detects
+  the server name from `FastMCP("…")`, the primitives from `@mcp.tool`,
+  `@mcp.resource`, and `@mcp.prompt` decorators (both `@dec` and `@dec(...)`
+  call forms), and the tool input schema from typed function signatures.
 - `review_fastmcp_manifest` now accepts `uriTemplate` and `uri_template` as
   aliases for the resource `uri` field. Templated resources in MCP wire
   format declare `uriTemplate`, not `uri`; rejecting it produced
