@@ -4,6 +4,19 @@ All notable changes to this template will be documented in this file.
 
 ## Unreleased
 
+- `extract_manifest_from_source` now produces accurate JSON schemas for the
+  full FastMCP idiom set instead of falling back to `"type": "string"`:
+    - `Optional[X]` / `Union[X, None]` / `X | None` unwrap to the inner type.
+    - `Literal["a", "b", "c"]` surfaces as `{"type": "string", "enum": [...]}`
+      so the model sees the allowed values.
+    - `Annotated[X, Field(description=..., ge=..., le=..., min_length=..., ...)]`
+      surfaces Field metadata as JSON Schema properties (description, minimum,
+      maximum, exclusiveMinimum, exclusiveMaximum, minLength, maxLength, pattern).
+    - Same-module Pydantic `BaseModel` parameters expand inline — a tool
+      with `params: SearchInput` now exposes the SearchInput fields with
+      their types, descriptions, bounds, and required markers. Closes
+      the "wrapper input models hide the schema" false positive that the
+      design-review skill flagged against bailii-mcp.
 - New tool `check_silent_error_returns(path)` AST-scans a FastMCP server
   source for the silent-failure-conversion anti-pattern — any `@mcp.tool`
   function that returns `{"error": ...}`, `"Error: ..."`, or `f"Error: ..."`
