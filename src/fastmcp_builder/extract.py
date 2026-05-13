@@ -57,7 +57,13 @@ def extract_manifest_from_source(path: str) -> dict[str, Any]:
 
 
 def _server_name_from_FastMCP_call(call: ast.Call) -> str | None:
-    """Return the snake_case slug of FastMCP("Some Name") if matched, else None."""
+    """Return the snake_case slug of a FastMCP(...) call if matched, else None.
+
+    Accepts both call shapes used by real fleet servers:
+        FastMCP("My Server")          # positional
+        FastMCP(name="My Server")     # keyword
+        FastMCP("My Server", instructions=...)  # mixed
+    """
     target = call.func
     is_fastmcp = (
         (isinstance(target, ast.Name) and target.id == "FastMCP")
@@ -65,11 +71,18 @@ def _server_name_from_FastMCP_call(call: ast.Call) -> str | None:
     )
     if not is_fastmcp:
         return None
-    if not call.args or not isinstance(call.args[0], ast.Constant):
+
+    raw: str | None = None
+    if call.args and isinstance(call.args[0], ast.Constant) and isinstance(call.args[0].value, str):
+        raw = call.args[0].value
+    else:
+        for kw in call.keywords:
+            if kw.arg == "name" and isinstance(kw.value, ast.Constant) and isinstance(kw.value.value, str):
+                raw = kw.value.value
+                break
+    if raw is None:
         return None
-    raw = call.args[0].value
-    if not isinstance(raw, str):
-        return None
+
     # Lowercase, replace non-alphanumeric runs with underscores, strip edges.
     slug = "".join(c.lower() if c.isalnum() else "_" for c in raw).strip("_")
     while "__" in slug:
