@@ -17,6 +17,7 @@ from fastmcp_builder.models import (
     PromptContract,
     PromptNameReport,
     ResourceContract,
+    SilentErrorReport,
     ToolContract,
     ToolNameReport,
     UriStabilityReport,
@@ -80,7 +81,7 @@ def extract_manifest_from_source(path: str) -> dict[str, Any]:
 
 
 @mcp.tool
-def check_silent_error_returns(path: str) -> dict[str, Any]:
+def check_silent_error_returns(path: str) -> SilentErrorReport:
     """Scan a FastMCP server's Python source for the silent-failure-conversion
     anti-pattern: an @mcp.tool function that returns an error-shaped sentinel
     (a dict with an "error" key, or a string starting with "Error") instead
@@ -91,9 +92,10 @@ def check_silent_error_returns(path: str) -> dict[str, Any]:
     itself returns error sentinels — the bailii-mcp pattern). Does not execute
     the source.
 
-    Returns {"passed": bool, "findings": list[{"tool", "line", "pattern"}]}.
-    Each finding names the offending tool, the source line of the return
-    statement, and a short label of the pattern matched.
+    Returns a SilentErrorReport whose `findings` are ReviewFinding objects
+    (severity=HIGH, code="tool.silent_error_return"). Same shape as
+    review_fastmcp_manifest so the design-review skill can merge findings
+    uniformly by severity.
     """
     return _check_silent_error_returns(path)
 

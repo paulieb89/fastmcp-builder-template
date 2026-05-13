@@ -37,6 +37,16 @@ class ManifestReview(BaseModel):
     findings: list[ReviewFinding] = Field(default_factory=list)
 
 
+class SilentErrorReport(BaseModel):
+    """Source-level scan for the silent-failure-conversion anti-pattern.
+
+    Findings reuse ReviewFinding so the design-review skill can merge them
+    with manifest review output and sort uniformly by severity.
+    """
+    passed: bool
+    findings: list[ReviewFinding] = Field(default_factory=list)
+
+
 class ParameterSpec(BaseModel):
     name: str
     type: str
