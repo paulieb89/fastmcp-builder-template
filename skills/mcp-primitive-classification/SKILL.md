@@ -1,6 +1,6 @@
 ---
 name: mcp-primitive-classification
-description: Classify proposed MCP capabilities as tools, resources, or prompts.
+description: Decide whether an MCP capability should be a tool, resource, or prompt. Use when the user asks "is this a tool or a resource?", "should this be a prompt?", or is choosing the right MCP primitive for a FastMCP server.
 ---
 
 # MCP Primitive Classification

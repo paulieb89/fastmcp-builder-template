@@ -1,6 +1,6 @@
 ---
 name: fastmcp-build-loop
-description: Build FastMCP tools, resources, and prompts one spec section at a time with verify-and-self-correct after each unit.
+description: Iteratively implement a FastMCP server from a spec file — one tool/resource/prompt at a time, with pytest verification and self-review per unit. Use when the user says "build out the tools in this spec", "implement spec.md", or wants spec-driven server construction.
 ---
 
 # FastMCP Build Loop
