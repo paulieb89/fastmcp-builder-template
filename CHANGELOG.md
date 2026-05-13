@@ -4,6 +4,13 @@ All notable changes to this template will be documented in this file.
 
 ## Unreleased
 
+- Bundle a FastMCP docs snapshot at `docs/upstream/fastmcp-llms.md` (the
+  topic index from `https://gofastmcp.com/llms.txt`, ~35KB). The
+  `fastmcp-design-review` skill now consults the snapshot first and
+  WebFetches deeper pages on demand, instead of hard-coding any external
+  FastMCP MCP server name. Refresh with `scripts/refresh-fastmcp-docs.sh`
+  before tagging a release. Skill frontmatter now declares `docs:` URLs
+  as formal metadata.
 - New tool `extract_manifest_from_source(path)` parses a FastMCP server's
   Python source via `ast` and returns a manifest dict ready for
   `review_fastmcp_manifest`. Replaces the previous manual grep-and-reshape

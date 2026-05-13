@@ -1,6 +1,12 @@
 ---
 name: fastmcp-design-review
 description: Audit a FastMCP server or manifest for correct tool/resource/prompt boundaries, local-first scope, and test coverage. Use when the user says "review my MCP server", "check my FastMCP design", "audit this server's design", or points at a repo / server module / manifest for critique.
+metadata:
+  docs:
+    - "https://gofastmcp.com/llms.txt"
+    - "https://gofastmcp.com/llms-full.txt"
+  bundled_snapshot: "docs/upstream/fastmcp-llms.md"
+  refresh_script: "scripts/refresh-fastmcp-docs.sh"
 ---
 
 # FastMCP Design Review
@@ -12,6 +18,17 @@ Use this skill when reviewing a FastMCP server. The review has three layers:
 3. **Layer judgment checks** on top (the checklist below).
 
 Never ask the user to construct a manifest by hand. The skill does it.
+
+## Source of FastMCP truth
+
+When a judgment call needs current FastMCP behaviour (a decorator's exact kwargs, a middleware ordering rule, a new pattern shipped in the last few weeks), consult sources in this order:
+
+1. **Bundled snapshot** at `${CLAUDE_PLUGIN_ROOT}/docs/upstream/fastmcp-llms.md` — an index of every documented FastMCP topic with its URL. Fast, offline, current as of plugin release.
+2. **Live docs**, via WebFetch against the URLs listed in the bundled snapshot (or the `docs:` URLs in this skill's frontmatter). Use this when the snapshot's index lists a topic but you need its full content, or when a behaviour seems newer than the snapshot.
+
+Do not assume an external FastMCP MCP server is installed under any particular name — those vary across harnesses (`mcp__claude_ai_fastmcp__*`, `mcp__fastmcp__*`, etc.). Use the bundled snapshot + WebFetch instead.
+
+To regenerate the bundled snapshot (contributor-facing): `bash scripts/refresh-fastmcp-docs.sh`.
 
 ---
 
