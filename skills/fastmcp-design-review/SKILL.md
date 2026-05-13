@@ -17,37 +17,27 @@ Never ask the user to construct a manifest by hand. The skill does it.
 
 ## Layer 1 — Build the manifest from source
 
-Locate the server module(s) and extract primitives:
+Use the `extract_manifest_from_source` tool. Point it at the server module path:
+
+```
+extract_manifest_from_source(path="<repo-path>/<server_module>.py")
+```
+
+It returns a manifest dict ready for Layer 2 — deterministically, by walking the AST. No hand-construction, no grep+reshape iterations.
+
+Locate the server module first if it isn't obvious:
 
 ```bash
 # Find the FastMCP entry point.
 grep -rn "FastMCP(" --include="*.py" <repo-path> | head -5
-
-# Enumerate decorated capabilities.
-grep -rnE "^@(mcp\.tool|mcp\.resource|mcp\.prompt)" --include="*.py" <repo-path>
 ```
 
-For each match, read the surrounding function and its docstring. Extract:
+If the server is split across multiple files (e.g. a `server.py` plus a `resources.py` that registers extra `@mcp.resource` decorators via a helper), call `extract_manifest_from_source` on each file and merge the `primitives` lists — keep the server name from the file that declares `FastMCP(...)`.
 
-| Decorator | Manifest entry |
-|---|---|
-| `@mcp.tool` | `{"kind": "tool", "name": <fn name or `name=` kwarg>, "description": <docstring or `description=` kwarg>, "input_schema": <derived from type hints>}` |
-| `@mcp.resource("uri://...")` | `{"kind": "resource", "name": <`name=` kwarg or fn name>, "description": <`description=` kwarg or docstring>, "uri_template": <positional arg>}` |
-| `@mcp.prompt` | `{"kind": "prompt", "name": <fn name>, "description": <docstring>, "arguments": <derived from signature>}` |
+Field-name notes (the reviewer accepts all of these — `extract_manifest_from_source` uses the first column):
 
-Field-name notes (the reviewer accepts all of these — pick whichever is easiest to extract):
-
-- Tool input schema: `parameters` / `inputSchema` / `input_schema`
-- Resource URI: `uri` / `uriTemplate` / `uri_template`
-
-Combine all primitives into a single list and wrap:
-
-```json
-{
-  "name": "<snake_case server slug>",
-  "primitives": [ ... ]
-}
-```
+- Tool input schema: `input_schema` (also accepted: `inputSchema`, `parameters`)
+- Resource URI: `uri_template` (also accepted: `uriTemplate`, `uri`)
 
 ---
 

@@ -5,6 +5,7 @@ from typing import Any
 from fastmcp import FastMCP
 
 from fastmcp_builder.docs import list_examples, list_markdown_docs, read_doc, read_example
+from fastmcp_builder.extract import extract_manifest_from_source as _extract_manifest_from_source
 from fastmcp_builder.models import (
     DescriptionQualityReport,
     ErrorDesignReport,
@@ -61,6 +62,20 @@ def classify_mcp_primitive(
 def review_fastmcp_manifest(manifest: dict[str, Any]) -> ManifestReview:
     """Review a FastMCP capability manifest for deterministic design issues."""
     return review_fastmcp_manifest_data(manifest)
+
+
+@mcp.tool
+def extract_manifest_from_source(path: str) -> dict[str, Any]:
+    """Parse a FastMCP server's Python source and emit a manifest dict ready
+    to feed into review_fastmcp_manifest. Use this instead of asking the user
+    to hand-construct a manifest — point this at the server module path and
+    the manifest comes back deterministically.
+
+    Walks decorators (@mcp.tool / @mcp.resource / @mcp.prompt) via Python's
+    ast module. Detects the server name from the FastMCP("…") constructor.
+    Does not execute the source.
+    """
+    return _extract_manifest_from_source(path)
 
 
 @mcp.tool
