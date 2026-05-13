@@ -4,6 +4,12 @@ All notable changes to this template will be documented in this file.
 
 ## Unreleased
 
+- `review_fastmcp_manifest` now accepts `uriTemplate` and `uri_template` as
+  aliases for the resource `uri` field. Templated resources in MCP wire
+  format declare `uriTemplate`, not `uri`; rejecting it produced
+  false-positive `resource.missing_uri` findings on every templated
+  resource. A resource with none of `uri` / `uriTemplate` / `uri_template`
+  is still flagged as a HIGH-severity structural error.
 - `review_fastmcp_manifest` now accepts `inputSchema` and `input_schema` as
   aliases for the tool input-schema field (was: only `parameters`). Real
   FastMCP servers emit `inputSchema` at runtime per the MCP wire format;
