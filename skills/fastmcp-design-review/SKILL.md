@@ -103,12 +103,31 @@ Anti-patterns to flag specifically:
 
 ## Report format
 
-Structure findings as:
+Group findings by **spec source first**, then by severity within each group. This makes the grounding visible — a "HIGH" labelled MCP shows that hosts may refuse the server; a "HIGH" labelled opinion is style, not a protocol violation.
 
-1. **Summary line** — pass/fail and counts by severity.
-2. **High-severity findings** (deterministic + judgment, grouped).
-3. **Medium-severity findings**.
-4. **Low-severity findings**.
-5. **Recommended next PRs**, ordered by impact, each a single small change.
+```
+Summary: <pass | fail> — N high, N medium, N low (S spec, O opinion)
+
+### MCP protocol findings
+- [HIGH] code · path · message · MCP §spec/section
+- [MEDIUM] ...
+
+### FastMCP framework findings
+- [HIGH] code · path · message · FastMCP §spec/section
+- [MEDIUM] ...
+
+### Opinion-class findings (informational)
+- [LOW] code · path · message  (no spec citation — judgment-class)
+
+### Layer 3 — judgment notes
+- Free-form judgment-layer observations from the checklist below.
+- These are not deterministic findings; flag clearly as opinions.
+
+### Recommended next PRs
+1. Highest-impact fix first.
+2. ...
+```
+
+For every finding, quote `finding.spec_source` and `finding.spec_section` verbatim — that's how the reader can verify the rule against the source spec without trusting the skill.
 
 Quote file paths with line numbers when pointing at specific code (e.g. `server.py:142`).

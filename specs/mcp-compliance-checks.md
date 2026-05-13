@@ -215,7 +215,7 @@ checks with `spec_source != "opinion"`.
 
 ---
 
-## add_finding_grouping_to_skill_output
+## add_finding_grouping_to_skill_output [done]
 
 **Spec source:** Skill UX.
 

@@ -39,3 +39,14 @@ def test_layer_2_mentions_spec_citation_in_findings(skill_body: str) -> None:
     that's how grounding stays visible to the human."""
     assert "spec_source" in skill_body
     assert "spec_section" in skill_body
+
+
+def test_report_format_groups_by_spec_source(skill_body: str) -> None:
+    """Unit 4 — the report template groups findings under MCP / FastMCP / Opinion
+    headers so the reader can immediately see protocol violations vs judgment-class
+    findings. Without this grouping the audit's grounding work is invisible to the
+    end user."""
+    _, _, report_section = skill_body.partition("## Report format")
+    assert "MCP protocol findings" in report_section
+    assert "FastMCP framework findings" in report_section
+    assert "Opinion-class findings" in report_section
