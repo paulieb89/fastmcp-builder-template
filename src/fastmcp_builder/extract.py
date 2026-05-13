@@ -3,11 +3,17 @@
 Walks a FastMCP server's source code via the `ast` module and produces a
 manifest dict in the shape expected by `review_fastmcp_manifest_data`.
 Deterministic, no execution of the source.
+
+Also exports shared AST helpers consumed by `checks.py`:
+    load_ast(path)                  open + parse a source file
+    classify_decorator(decorator)   'tool'/'resource'/'prompt' or None
+    iter_mcp_decorated_functions    yields (node, kind, decorator) for each
 """
 
 from __future__ import annotations
 
 import ast
+from collections.abc import Iterator
 from typing import Any
 
 _TYPE_HINT_MAP = {
@@ -20,6 +26,52 @@ _TYPE_HINT_MAP = {
 }
 
 
+# ---------------------------------------------------------------------------
+# Shared AST helpers (used by extract.py itself and by checks.py)
+# ---------------------------------------------------------------------------
+
+
+def load_ast(path: str) -> ast.Module:
+    """Open and parse a Python source file. Always UTF-8."""
+    with open(path, encoding="utf-8") as f:
+        return ast.parse(f.read())
+
+
+def classify_decorator(decorator: ast.expr) -> str | None:
+    """Return 'tool' / 'resource' / 'prompt' if the decorator is a FastMCP one.
+
+    Handles both `@mcp.tool` (Attribute) and `@mcp.tool(...)` (Call wrapping
+    Attribute) forms.
+    """
+    target = decorator.func if isinstance(decorator, ast.Call) else decorator
+    if isinstance(target, ast.Attribute) and target.attr in {"tool", "resource", "prompt"}:
+        return target.attr
+    return None
+
+
+def iter_mcp_decorated_functions(
+    tree: ast.Module,
+) -> Iterator[tuple[ast.FunctionDef | ast.AsyncFunctionDef, str, ast.expr]]:
+    """Yield (function_node, primitive_kind, decorator_node) for each module-level
+    function decorated with @mcp.tool / @mcp.resource / @mcp.prompt.
+
+    Module-level only — FastMCP primitives can't live inside nested scopes.
+    """
+    for top_level in tree.body:
+        if not isinstance(top_level, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            continue
+        for decorator in top_level.decorator_list:
+            kind = classify_decorator(decorator)
+            if kind is not None:
+                yield top_level, kind, decorator
+                break
+
+
+# ---------------------------------------------------------------------------
+# Manifest extraction
+# ---------------------------------------------------------------------------
+
+
 def extract_manifest_from_source(path: str) -> dict[str, Any]:
     """Extract a FastMCP manifest from a Python source file.
 
@@ -30,30 +82,30 @@ def extract_manifest_from_source(path: str) -> dict[str, Any]:
     detected. Primitives is the empty list when no @mcp.tool / @mcp.resource /
     @mcp.prompt decorators are present.
     """
-    with open(path) as f:
-        tree = ast.parse(f.read())
+    tree = load_ast(path)
+
+    server_name = _detect_server_name(tree)
 
     primitives: list[dict[str, Any]] = []
-    server_name = "unknown"
+    for node, kind, decorator in iter_mcp_decorated_functions(tree):
+        if kind == "tool":
+            primitives.append(_extract_tool(node))
+        elif kind == "resource":
+            primitives.append(_extract_resource(node, decorator))
+        elif kind == "prompt":
+            primitives.append(_extract_prompt(node))
+
+    return {"name": server_name, "primitives": primitives}
+
+
+def _detect_server_name(tree: ast.Module) -> str:
+    """Find the first FastMCP(...) call anywhere in the tree, return its slug."""
     for node in ast.walk(tree):
         if isinstance(node, ast.Call):
             detected = _server_name_from_FastMCP_call(node)
             if detected:
-                server_name = detected
-        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
-            for decorator in node.decorator_list:
-                kind = _classify_decorator(decorator)
-                if kind == "tool":
-                    primitives.append(_extract_tool(node))
-                    break
-                if kind == "resource":
-                    primitives.append(_extract_resource(node, decorator))
-                    break
-                if kind == "prompt":
-                    primitives.append(_extract_prompt(node))
-                    break
-
-    return {"name": server_name, "primitives": primitives}
+                return detected
+    return "unknown"
 
 
 def _server_name_from_FastMCP_call(call: ast.Call) -> str | None:
@@ -83,21 +135,10 @@ def _server_name_from_FastMCP_call(call: ast.Call) -> str | None:
     if raw is None:
         return None
 
-    # Lowercase, replace non-alphanumeric runs with underscores, strip edges.
     slug = "".join(c.lower() if c.isalnum() else "_" for c in raw).strip("_")
     while "__" in slug:
         slug = slug.replace("__", "_")
     return slug or None
-
-
-def _classify_decorator(decorator: ast.expr) -> str | None:
-    """Return 'tool' / 'resource' / 'prompt' if the decorator is a FastMCP one."""
-    # @mcp.tool, @mcp.resource, @mcp.prompt — Attribute nodes
-    # @mcp.tool(...), @mcp.resource("uri", ...), @mcp.prompt(...) — Call nodes
-    target = decorator.func if isinstance(decorator, ast.Call) else decorator
-    if isinstance(target, ast.Attribute) and target.attr in {"tool", "resource", "prompt"}:
-        return target.attr
-    return None
 
 
 def _extract_tool(node: ast.FunctionDef | ast.AsyncFunctionDef) -> dict[str, Any]:
