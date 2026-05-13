@@ -38,7 +38,10 @@ GitHub Actions runs `uv sync` and `uv run pytest` on every push and pull request
 
 ## Release Verification
 
-Before publishing or tagging a release, verify the template from a clean clone:
+Before tagging a release that bumps the plugin version, verify both
+in-repo and plugin install paths.
+
+### In-repo verification
 
 ```bash
 git clone https://github.com/paulieb89/fastmcp-builder-template.git /tmp/fastmcp-builder-template-check
@@ -49,10 +52,16 @@ uv run pytest
 uv run fastmcp run src/fastmcp_builder/server.py:mcp
 ```
 
-Then open Claude Code from the repository root and run:
+### Plugin install verification
+
+In a clean test project (any directory), run:
 
 ```text
+/plugin install /tmp/fastmcp-builder-template-check
 /mcp
 ```
 
-Expected result: `fastmcp-builder` appears as a project-scoped MCP server.
+Expected: a server named `fastmcp-builder` (server key `srv`) appears, and
+its tools surface as `mcp__plugin_fastmcp-builder_srv__<tool_name>`. Run
+one tool (for example `classify_mcp_primitive`) and confirm the response
+shape matches the Pydantic models in `src/fastmcp_builder/models.py`.
