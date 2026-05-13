@@ -4,6 +4,34 @@ All notable changes to this template will be documented in this file.
 
 ## Unreleased
 
+- **Spec-grounded compliance audit** (`specs/mcp-compliance-checks.md`,
+  shipped via the `fastmcp-build-loop` skill across 7 work units).
+
+  - `ReviewFinding` gains optional `spec_source` + `spec_section` fields
+    so every plugin finding cites the MCP/FastMCP rule it enforces.
+  - All existing manifest-review findings audited against MCP/FastMCP/opinion
+    and tagged in `docs/check-audit.md`. Citations applied via a single
+    `_finding()` helper + central `_CITATIONS` table.
+  - `check_silent_error_returns` cites `FastMCP/servers/tools.md#error-handling`.
+  - `check_error_response_design` reclassified as opinion-class — still callable
+    on demand, removed from the design-review skill's automatic Layer 2 path.
+  - Skill report format groups findings by spec source (MCP protocol /
+    FastMCP framework / Opinion-class) so the grounding is visible at the
+    output layer.
+  - **New tool `check_resource_mime_type_declared(path)`** — flags
+    `@mcp.resource` decorators without `mime_type=`. FastMCP-recommended,
+    MEDIUM severity.
+  - **New tool `check_prompt_argument_descriptions(path)`** — flags
+    `@mcp.prompt` arguments without descriptions (either via
+    `Annotated[X, Field(description=...)]` or a docstring Args block).
+    MCP-recommended, MEDIUM severity.
+  - **New tool `check_tool_annotations_declared(path)`** — flags
+    `@mcp.tool` decorators that don't declare the four standard
+    ToolAnnotations hints (readOnlyHint, destructiveHint, idempotentHint,
+    openWorldHint). MCP-recommended, MEDIUM severity.
+  - Generic `CheckReport` model added for new spec-grounded checks (same
+    shape as `ManifestReview` / `SilentErrorReport` so the design-review
+    skill can merge findings uniformly by severity).
 - `extract_manifest_from_source` now produces accurate JSON schemas for the
   full FastMCP idiom set instead of falling back to `"type": "string"`:
     - `Optional[X]` / `Union[X, None]` / `X | None` unwrap to the inner type.

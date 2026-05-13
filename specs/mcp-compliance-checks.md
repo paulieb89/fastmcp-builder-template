@@ -330,7 +330,7 @@ findings on which tools have/don't have annotations.
 
 ---
 
-## update_changelog_and_pr [skip]
+## update_changelog_and_pr [done]
 
 Not a buildable unit — a checklist for the human (or the build loop
 operator) at the end:
