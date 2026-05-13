@@ -9,5 +9,22 @@
   "homepage": "https://github.com/paulieb89/fastmcp-builder-template",
   "repository": "https://github.com/paulieb89/fastmcp-builder-template",
   "license": "MIT",
-  "keywords": ["fastmcp", "mcp", "claude-code", "server-builder"]
+  "keywords": ["fastmcp", "mcp", "claude-code", "server-builder"],
+  "mcpServers": {
+    "srv": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--project",
+        "${CLAUDE_PLUGIN_ROOT}",
+        "fastmcp",
+        "run",
+        "${CLAUDE_PLUGIN_ROOT}/src/fastmcp_builder/server.py:mcp"
+      ],
+      "env": {
+        "FASTMCP_BUILDER_DOCS_DIR": "${CLAUDE_PLUGIN_ROOT}/docs",
+        "FASTMCP_BUILDER_EXAMPLES_DIR": "${CLAUDE_PLUGIN_ROOT}/examples"
+      }
+    }
+  }
 }

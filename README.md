@@ -22,32 +22,49 @@ Run the server locally with STDIO:
 uv run fastmcp run src/fastmcp_builder/server.py:mcp
 ```
 
-Claude Code can discover this project server from the root `.mcp.json`.
+## Install as a Claude Code Plugin
 
-## Using With Claude Code
-
-Open Claude Code from the repository root after installing dependencies:
-
-```bash
-uv sync
-claude
-```
-
-The root `.mcp.json` configures a project-scoped MCP server named `fastmcp-builder`:
+Install this repository as a Claude Code plugin to make the FastMCP Builder
+tools, resources, prompts, skills, and slash commands available in any
+project:
 
 ```bash
-uv run fastmcp run src/fastmcp_builder/server.py:mcp
+/plugin install https://github.com/paulieb89/fastmcp-builder-template
 ```
 
-In Claude Code, run:
+Prerequisites:
+
+- `uv` must be installed and on `$PATH`. The plugin runs the MCP server with
+  `uv run --project ${CLAUDE_PLUGIN_ROOT} …`, so `uv` is a hard requirement.
+
+After install, confirm the server registered:
 
 ```text
 /mcp
 ```
 
-Expected result: `fastmcp-builder` appears as a project-scoped MCP server. Claude can then use the builder tools, resources, and prompts from this repository while working on the project.
+Expected: a server named `fastmcp-builder` (server key `srv`) appears.
+Tools surface as `mcp__plugin_fastmcp-builder_srv__<tool_name>` (for example
+`mcp__plugin_fastmcp-builder_srv__classify_mcp_primitive`).
 
-You can also use this repo as a cross-project MCP advisor by pointing another project's `.mcp.json` at this server with `uv --directory`; see [docs/claude-code-workflow.md](docs/claude-code-workflow.md).
+Skills and slash commands auto-discover from the plugin:
+
+- Slash commands: `/design-fastmcp`, `/add-tool`, `/review-manifest`
+- Skills (loaded by Claude on matching prompts): see the table below
+
+### In-Repo Development
+
+When working **on** this template, you don't need the plugin server running.
+Run the MCP server directly to test changes:
+
+```bash
+uv sync
+uv run fastmcp run src/fastmcp_builder/server.py:mcp
+```
+
+To exercise the plugin end-to-end while developing, install it from your
+local checkout in a separate test project (see
+[docs/claude-code-workflow.md](docs/claude-code-workflow.md)).
 
 ## What This Template Teaches
 

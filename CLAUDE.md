@@ -10,7 +10,7 @@ This repository is a local-first FastMCP builder template.
 - Do not add arbitrary shell-command tools.
 - Do not add runtime network calls unless explicitly approved.
 - Do not add auth, hosted services, databases, crawlers, scrapers, vector DBs, or background jobs.
-- Preserve project-scoped `.mcp.json`.
+- Preserve `.claude-plugin/plugin.json` — it wires the MCP server, skills, and commands for the plugin.
 - Treat MCP primitives correctly:
   - Tools are model-controlled capabilities.
   - Resources are client/app-controlled data.

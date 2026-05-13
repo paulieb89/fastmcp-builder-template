@@ -4,6 +4,18 @@ All notable changes to this template will be documented in this file.
 
 ## Unreleased
 
+## 0.3.0
+
+- Wire the repository as an installable Claude Code plugin. Skills and commands
+  move from `.claude/` to plugin-root `skills/` and `commands/` for plugin
+  auto-discovery. The MCP server is declared inline in
+  `.claude-plugin/plugin.json` via `mcpServers.srv` using
+  `${CLAUDE_PLUGIN_ROOT}` for portable paths.
+- Remove root `.mcp.json` (replaced by the plugin manifest). In-repo
+  contributors run the server directly with
+  `uv run fastmcp run src/fastmcp_builder/server.py:mcp` when needed.
+- Align `pyproject.toml` version with `plugin.json` (both now 0.3.0).
+
 ## 0.2.0
 
 - Add `check_uri_stability` tool — deterministic URI stability checks.
