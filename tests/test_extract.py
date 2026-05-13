@@ -137,6 +137,44 @@ mcp = FastMCP("My Awesome Server")
     assert manifest["name"] == "my_awesome_server"
 
 
+def test_detects_server_name_from_FastMCP_name_kwarg(tmp_path: Path) -> None:
+    """FastMCP(name="...") — keyword arg form, no positional name."""
+    path = _write(
+        tmp_path,
+        '''
+from fastmcp import FastMCP
+
+mcp = FastMCP(name="My Awesome Server", instructions="Do useful things.")
+''',
+    )
+    manifest = extract_manifest_from_source(str(path))
+    assert manifest["name"] == "my_awesome_server"
+
+
+def test_detects_server_name_from_multiline_FastMCP_call(tmp_path: Path) -> None:
+    """FastMCP("Name", instructions=...) — positional name plus multi-line kwargs.
+
+    Real fleet servers (whatdotheyknow-mcp, uk-business-mcp) use this shape;
+    the constructor spans several lines because `instructions` is multi-line.
+    """
+    path = _write(
+        tmp_path,
+        '''
+from fastmcp import FastMCP
+
+mcp = FastMCP(
+    "WhatDoTheyKnow MCP",
+    instructions=(
+        "Read WhatDoTheyKnow public JSON, Atom feeds, and CSV exports. "
+        "Optionally call the experimental write API if configured."
+    ),
+)
+''',
+    )
+    manifest = extract_manifest_from_source(str(path))
+    assert manifest["name"] == "whatdotheyknow_mcp"
+
+
 def test_extracted_manifest_passes_review_for_real_example() -> None:
     """End-to-end: parse the bundled notes_server example, feed the manifest
     into the reviewer, expect zero HIGH-severity findings.
