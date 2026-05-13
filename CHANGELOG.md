@@ -4,6 +4,17 @@ All notable changes to this template will be documented in this file.
 
 ## Unreleased
 
+- New tool `check_silent_error_returns(path)` AST-scans a FastMCP server
+  source for the silent-failure-conversion anti-pattern — any `@mcp.tool`
+  function that returns `{"error": ...}`, `"Error: ..."`, or `f"Error: ..."`
+  instead of raising. Catches the pattern that came up in 3/3 of the first
+  fleet-server reviews (govuk, wdtk, bailii). Also follows one level of
+  indirection: a tool that returns `_handle_error(e)` is flagged when
+  `_handle_error` itself returns error sentinels (the bailii-mcp pattern).
+- `fastmcp-design-review` skill now invokes `check_silent_error_returns`
+  alongside `review_fastmcp_manifest` in Layer 2, so the silent-error
+  pattern is caught deterministically across every reviewed server
+  without relying on judgment to remember it.
 - Bundle a FastMCP docs snapshot at `docs/upstream/fastmcp-llms.md` (the
   topic index from `https://gofastmcp.com/llms.txt`, ~35KB). The
   `fastmcp-design-review` skill now consults the snapshot first and

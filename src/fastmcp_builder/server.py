@@ -4,6 +4,7 @@ from typing import Any
 
 from fastmcp import FastMCP
 
+from fastmcp_builder.checks import check_silent_error_returns as _check_silent_error_returns
 from fastmcp_builder.docs import list_examples, list_markdown_docs, read_doc, read_example
 from fastmcp_builder.extract import extract_manifest_from_source as _extract_manifest_from_source
 from fastmcp_builder.models import (
@@ -76,6 +77,25 @@ def extract_manifest_from_source(path: str) -> dict[str, Any]:
     Does not execute the source.
     """
     return _extract_manifest_from_source(path)
+
+
+@mcp.tool
+def check_silent_error_returns(path: str) -> dict[str, Any]:
+    """Scan a FastMCP server's Python source for the silent-failure-conversion
+    anti-pattern: an @mcp.tool function that returns an error-shaped sentinel
+    (a dict with an "error" key, or a string starting with "Error") instead
+    of raising a structured error.
+
+    Catches both direct patterns (`return {"error": ...}` in the tool body)
+    and one level of indirection (`return _handle_error(e)` where the helper
+    itself returns error sentinels — the bailii-mcp pattern). Does not execute
+    the source.
+
+    Returns {"passed": bool, "findings": list[{"tool", "line", "pattern"}]}.
+    Each finding names the offending tool, the source line of the return
+    statement, and a short label of the pattern matched.
+    """
+    return _check_silent_error_returns(path)
 
 
 @mcp.tool

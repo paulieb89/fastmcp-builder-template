@@ -58,11 +58,18 @@ Field-name notes (the reviewer accepts all of these — `extract_manifest_from_s
 
 ---
 
-## Layer 2 — Run the deterministic review
+## Layer 2 — Run the deterministic reviews
 
-Pass the manifest to `review_fastmcp_manifest`. Report any `high` findings first, then `medium`, then `low`. Each finding includes a JSON path — quote it verbatim so the user can locate the problem.
+Run both deterministic tools and merge their findings:
 
-If the review surfaces findings about the **manifest shape itself** (missing fields, wrong key names), that's a manifest-construction error in this skill — fix it and re-run, don't report it back to the user.
+1. **`review_fastmcp_manifest(manifest)`** — checks manifest shape, primitive names, tool input schemas, resource URIs, prompt arguments.
+2. **`check_silent_error_returns(path)`** — AST-scans the source for tools that return `{"error": ...}` or `"Error: …"` strings instead of raising. The biggest cross-fleet anti-pattern; catch it automatically rather than relying on judgment.
+
+Run `check_silent_error_returns` on every server file that contains `@mcp.tool` decorators (the same files you ran `extract_manifest_from_source` on). For multi-file servers, run it on each.
+
+Report any `high` findings first, then `medium`, then `low`. Each finding includes either a JSON path (manifest review) or a tool name + line number (silent-error check) — quote them verbatim so the user can locate the problem.
+
+If the manifest review surfaces findings about the **manifest shape itself** (missing fields, wrong key names), that's a manifest-construction error in this skill — fix it and re-run, don't report it back to the user.
 
 ---
 
