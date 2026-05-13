@@ -60,14 +60,18 @@ Field-name notes (the reviewer accepts all of these — `extract_manifest_from_s
 
 ## Layer 2 — Run the deterministic reviews
 
-Run both deterministic tools and merge their findings:
+Run these tools in the **automatic** path — they emit findings with spec citations (`spec_source` = "MCP" or "FastMCP"). Each finding carries the spec section it enforces; report it verbatim.
 
 1. **`review_fastmcp_manifest(manifest)`** — checks manifest shape, primitive names, tool input schemas, resource URIs, prompt arguments.
-2. **`check_silent_error_returns(path)`** — AST-scans the source for tools that return `{"error": ...}` or `"Error: …"` strings instead of raising. The biggest cross-fleet anti-pattern; catch it automatically rather than relying on judgment.
+2. **`check_silent_error_returns(path)`** — AST-scans the source for tools that return `{"error": ...}` or `"Error: …"` strings instead of raising. FastMCP framework rule (`servers/tools.md#error-handling`).
 
 Run `check_silent_error_returns` on every server file that contains `@mcp.tool` decorators (the same files you ran `extract_manifest_from_source` on). For multi-file servers, run it on each.
 
-Report any `high` findings first, then `medium`, then `low`. Each finding includes either a JSON path (manifest review) or a tool name + line number (silent-error check) — quote them verbatim so the user can locate the problem.
+**Available but NOT in the automatic path** (opinion-class — see `docs/check-audit.md`):
+
+- `check_error_response_design(tool_behavior, failure_modes)` — categorisation helper for thinking about error responses. Useful when designing a tool, but doesn't enforce a single spec rule. Call it on demand when the user is designing a new tool, not as part of a review pass.
+
+Findings carry `severity`, `code`, `path`, and `spec_source` / `spec_section`. Quote the citation in the report so the reader can verify the rule. If `spec_source == "opinion"`, label the finding clearly so it isn't mistaken for a protocol violation.
 
 If the manifest review surfaces findings about the **manifest shape itself** (missing fields, wrong key names), that's a manifest-construction error in this skill — fix it and re-run, don't report it back to the user.
 

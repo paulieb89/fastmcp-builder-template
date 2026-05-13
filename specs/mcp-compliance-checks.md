@@ -188,7 +188,7 @@ every check's findings carry citations; the snapshot test passes.
 
 ---
 
-## drop_or_demote_unsourced_checks
+## drop_or_demote_unsourced_checks [done]
 
 **Spec source:** Output of the audit above.
 
