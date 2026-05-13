@@ -30,6 +30,12 @@ class ReviewFinding(BaseModel):
     code: str
     message: str
     path: str
+    # Citation: which spec rule the finding enforces. None for legacy findings
+    # not yet audited; "MCP" or "FastMCP" once a clean citation exists; "opinion"
+    # for fleet/convention rules without protocol grounding (kept callable but
+    # not auto-fired by the design-review skill).
+    spec_source: str | None = None
+    spec_section: str | None = None
 
 
 class ManifestReview(BaseModel):
@@ -42,6 +48,16 @@ class SilentErrorReport(BaseModel):
 
     Findings reuse ReviewFinding so the design-review skill can merge them
     with manifest review output and sort uniformly by severity.
+    """
+    passed: bool
+    findings: list[ReviewFinding] = Field(default_factory=list)
+
+
+class CheckReport(BaseModel):
+    """Generic source-check report shape — used by new spec-grounded checks.
+
+    Same shape as SilentErrorReport and ManifestReview (passed + findings list),
+    so the design-review skill can merge findings uniformly.
     """
     passed: bool
     findings: list[ReviewFinding] = Field(default_factory=list)

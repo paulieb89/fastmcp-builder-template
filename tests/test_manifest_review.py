@@ -193,6 +193,76 @@ def test_resource_with_no_uri_still_fails():
     assert any(f.code == "resource.missing_uri" and f.severity == "high" for f in result.findings)
 
 
+def test_every_manifest_review_finding_carries_a_citation():
+    """Snapshot — feed a deliberately broken manifest, assert every finding
+    emitted by review_fastmcp_manifest_data carries a non-None spec_source.
+
+    Codes audited in docs/check-audit.md must round-trip their citations
+    through the review function. This guards against future code paths that
+    construct ReviewFinding directly instead of via the _finding helper.
+    """
+    broken_manifest = {
+        # name missing on purpose → manifest.missing_name
+        "primitives": [
+            # Each primitive triggers a different finding code.
+            {"kind": "unknown", "name": "x", "description": "a" * 30, "parameters": {}},  # invalid_kind
+            {"kind": "tool", "name": "MixedCase", "description": "a" * 30, "parameters": {}},  # name_format
+            {"kind": "tool", "name": "ok_tool", "description": "short", "parameters": {}},  # description_too_short
+            {"kind": "tool", "name": "no_schema", "description": "a" * 30},  # tool.missing_parameters
+            {"kind": "resource", "name": "no_uri", "description": "a" * 30},  # resource.missing_uri
+            {"kind": "prompt", "name": "no_args", "description": "a" * 30},  # prompt.missing_arguments (opinion)
+        ],
+    }
+    result = review_fastmcp_manifest_data(broken_manifest)
+
+    assert result.findings, "Expected the broken manifest to produce findings."
+    for f in result.findings:
+        assert f.spec_source is not None, (
+            f"Finding code='{f.code}' has no spec_source — citation missing. "
+            "Add it to _CITATIONS in src/fastmcp_builder/review.py."
+        )
+
+    # Spot-check specific citations against the audit doc.
+    by_code = {f.code: f for f in result.findings}
+    assert by_code["manifest.missing_name"].spec_source == "MCP"
+    assert by_code["resource.missing_uri"].spec_source == "MCP"
+    assert by_code["prompt.missing_arguments"].spec_source == "opinion"
+
+
+def test_review_finding_accepts_spec_citation_fields():
+    """ReviewFinding gains optional spec_source / spec_section fields so the
+    design-review skill can group findings by their MCP/FastMCP citation."""
+    from fastmcp_builder.models import ReviewFinding, Severity
+
+    f = ReviewFinding(
+        severity=Severity.HIGH,
+        code="tool.silent_error_return",
+        message="Tool 'x' returns error sentinel at line 42 instead of raising.",
+        path="$.primitives.x",
+        spec_source="FastMCP",
+        spec_section="servers/tools.md#error-handling",
+    )
+
+    dumped = f.model_dump()
+    assert dumped["spec_source"] == "FastMCP"
+    assert dumped["spec_section"] == "servers/tools.md#error-handling"
+
+
+def test_review_finding_without_citation_still_valid():
+    """Backward compatibility: existing call sites that omit spec fields work."""
+    from fastmcp_builder.models import ReviewFinding, Severity
+
+    f = ReviewFinding(
+        severity=Severity.MEDIUM,
+        code="primitive.name_format",
+        message="...",
+        path="$.primitives[0].name",
+    )
+
+    assert f.spec_source is None
+    assert f.spec_section is None
+
+
 def test_missing_name_is_high_severity():
     """A primitive with no name at all is a structural error, not just a format issue."""
     result = review_fastmcp_manifest_data(
