@@ -338,36 +338,3 @@ def _docstring_documents_arg(docstring: str, arg_name: str) -> bool:
     # Pattern: arg_name optionally followed by parens, then colon.
     pattern = rf"(?m)^\s*(?:[-*]\s*)?{re.escape(arg_name)}\s*(?:\([^)]*\))?\s*:"
     return bool(re.search(pattern, body))
-    """Scan source for @mcp.resource decorators that don't declare a mime_type.
-
-    Spec source: FastMCP framework — `servers/resources.md`. The `mime_type=`
-    kwarg lets the client display the resource correctly without inferring
-    from the return type. Severity MEDIUM (FastMCP-recommended, not
-    MCP-mandatory).
-    """
-    tree = load_ast(path)
-
-    findings: list[ReviewFinding] = []
-    for node, kind, decorator in iter_mcp_decorated_functions(tree):
-        if kind != "resource":
-            continue
-        has_mime = False
-        if isinstance(decorator, ast.Call):
-            has_mime = any(kw.arg == "mime_type" for kw in decorator.keywords)
-        if not has_mime:
-            findings.append(
-                ReviewFinding(
-                    severity=Severity.MEDIUM,
-                    code="resource.missing_mime_type",
-                    message=(
-                        f"Resource '{node.name}' has no mime_type= kwarg on its "
-                        f"@mcp.resource decorator. FastMCP will infer one from "
-                        f"the return type, which is brittle for non-string content."
-                    ),
-                    path=f"$.primitives.{node.name}",
-                    spec_source="FastMCP",
-                    spec_section="servers/resources.md#mime_type",
-                )
-            )
-
-    return CheckReport(passed=not findings, findings=findings)

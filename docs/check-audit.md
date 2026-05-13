@@ -42,7 +42,7 @@ here for traceability. A future refactor could migrate them to
 | `check_prompt_name_format` | MEDIUM | FastMCP | `servers/prompts.md#naming` | snake_case for prompt names. |
 | `check_uri_stability` | MEDIUM | MCP | `server/resources#uri-stability` | No volatile tokens, no query strings, no live HTTP URLs. |
 | `check_tool_description_quality` | MEDIUM | MCP | `server/tools#description` | Description specificity for model-controlled use. |
-| `check_error_response_design` | n/a | **opinion** | — | Categorisation helper, not a deterministic rule. Will be demoted in unit 3 (`drop_or_demote_unsourced_checks`). |
+| `check_error_response_design` | n/a | **opinion** | — | Categorisation helper, not a deterministic rule. Demoted from the design-review skill's automatic Layer 2 path (unit 3, `drop_or_demote_unsourced_checks`); still callable as a tool on demand. |
 
 ## Non-review tools (no findings, no citation needed)
 

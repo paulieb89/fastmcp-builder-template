@@ -2,7 +2,6 @@
 
 from pathlib import Path
 
-import pytest
 
 from fastmcp_builder.extract import extract_manifest_from_source
 from fastmcp_builder.review import review_fastmcp_manifest_data

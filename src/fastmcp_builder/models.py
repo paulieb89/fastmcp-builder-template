@@ -25,6 +25,9 @@ class PrimitiveClassification(BaseModel):
     alternatives: list[str] = Field(default_factory=list)
 
 
+SpecSource = Literal["MCP", "FastMCP", "opinion"]
+
+
 class ReviewFinding(BaseModel):
     severity: Severity
     code: str
@@ -34,7 +37,7 @@ class ReviewFinding(BaseModel):
     # not yet audited; "MCP" or "FastMCP" once a clean citation exists; "opinion"
     # for fleet/convention rules without protocol grounding (kept callable but
     # not auto-fired by the design-review skill).
-    spec_source: str | None = None
+    spec_source: SpecSource | None = None
     spec_section: str | None = None
 
 

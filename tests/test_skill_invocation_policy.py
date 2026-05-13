@@ -19,19 +19,31 @@ def skill_body() -> str:
 
 
 def test_layer_2_lists_only_spec_grounded_checks(skill_body: str) -> None:
-    """The Layer 2 automatic invocation list contains only the two spec-grounded
-    checks. Opinion-class tools (`check_error_response_design`) belong below the
-    'Available but NOT in the automatic path' heading."""
-    head, _, rest = skill_body.partition("## Layer 2")
+    """The Layer 2 automatic-path list contains only spec-grounded checks
+    (MCP / FastMCP). Opinion-class and ad-hoc-helper tools belong below the
+    'On-demand only' heading so the skill doesn't auto-fire them."""
+    _, _, rest = skill_body.partition("## Layer 2")
     layer_2_section, _, _ = rest.partition("## Layer 3")
-    auto_path, _, on_demand = layer_2_section.partition("Available but NOT in the automatic path")
+    auto_path, _, on_demand = layer_2_section.partition("On-demand only")
 
-    # Spec-grounded checks belong in the auto path.
-    assert "review_fastmcp_manifest" in auto_path
-    assert "check_silent_error_returns" in auto_path
-    # Opinion-class check belongs in the on-demand section.
-    assert "check_error_response_design" not in auto_path
-    assert "check_error_response_design" in on_demand
+    # All five spec-grounded checks belong in the auto path.
+    for tool in (
+        "review_fastmcp_manifest",
+        "check_silent_error_returns",
+        "check_resource_mime_type_declared",
+        "check_prompt_argument_descriptions",
+        "check_tool_annotations_declared",
+    ):
+        assert tool in auto_path, f"{tool} should be in the Layer 2 auto path"
+
+    # Opinion-class and single-value helpers must NOT be in the auto path.
+    for tool in (
+        "check_error_response_design",
+        "check_tool_name_format",
+        "check_uri_stability",
+    ):
+        assert tool not in auto_path, f"{tool} should be on-demand only, not auto-fired"
+        assert tool in on_demand, f"{tool} should be listed under 'On-demand only'"
 
 
 def test_layer_2_mentions_spec_citation_in_findings(skill_body: str) -> None:

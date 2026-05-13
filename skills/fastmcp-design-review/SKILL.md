@@ -62,14 +62,23 @@ Field-name notes (the reviewer accepts all of these — `extract_manifest_from_s
 
 Run these tools in the **automatic** path — they emit findings with spec citations (`spec_source` = "MCP" or "FastMCP"). Each finding carries the spec section it enforces; report it verbatim.
 
-1. **`review_fastmcp_manifest(manifest)`** — checks manifest shape, primitive names, tool input schemas, resource URIs, prompt arguments.
-2. **`check_silent_error_returns(path)`** — AST-scans the source for tools that return `{"error": ...}` or `"Error: …"` strings instead of raising. FastMCP framework rule (`servers/tools.md#error-handling`).
+**Manifest-level (one call per server):**
 
-Run `check_silent_error_returns` on every server file that contains `@mcp.tool` decorators (the same files you ran `extract_manifest_from_source` on). For multi-file servers, run it on each.
+1. **`review_fastmcp_manifest(manifest)`** — checks manifest shape, primitive names, tool input schemas, resource URIs, prompt arguments. Multiple MCP/FastMCP rules.
 
-**Available but NOT in the automatic path** (opinion-class — see `docs/check-audit.md`):
+**Source-level (run on every file that contains `@mcp.*` decorators — same files you fed to `extract_manifest_from_source`):**
 
-- `check_error_response_design(tool_behavior, failure_modes)` — categorisation helper for thinking about error responses. Useful when designing a tool, but doesn't enforce a single spec rule. Call it on demand when the user is designing a new tool, not as part of a review pass.
+2. **`check_silent_error_returns(path)`** — flags `@mcp.tool` functions that return `{"error": ...}` or `"Error: …"` instead of raising. **FastMCP** `servers/tools.md#error-handling`. HIGH severity.
+3. **`check_resource_mime_type_declared(path)`** — flags `@mcp.resource` decorators without `mime_type=`. **FastMCP** `servers/resources.md#mime_type`. MEDIUM severity.
+4. **`check_prompt_argument_descriptions(path)`** — flags `@mcp.prompt` arguments without descriptions (either via `Annotated[X, Field(description=...)]` or a docstring `Args:` block). **MCP** `server/prompts#argument-description`. MEDIUM severity.
+5. **`check_tool_annotations_declared(path)`** — flags `@mcp.tool` decorators missing the four standard ToolAnnotations hints (`readOnlyHint`, `destructiveHint`, `idempotentHint`, `openWorldHint`). **MCP** `server/tools#annotations`. MEDIUM severity.
+
+Merge the findings from all five tools and report them grouped by `spec_source` (see "Report format" below).
+
+**On-demand only — not auto-fired** (see `docs/check-audit.md`):
+
+- `check_error_response_design(tool_behavior, failure_modes)` — opinion-class categorisation helper for designing new error responses. No single spec rule.
+- `check_tool_name_format(name)` / `check_prompt_name_format(name)` / `check_uri_stability(uri_pattern)` / `check_tool_description_quality(...)` — single-value helpers exposed for ad-hoc use while authoring new primitives. The manifest review (#1 above) already runs the equivalent rules across an entire server, so the skill doesn't double up on them.
 
 Findings carry `severity`, `code`, `path`, and `spec_source` / `spec_section`. Quote the citation in the report so the reader can verify the rule. If `spec_source == "opinion"`, label the finding clearly so it isn't mistaken for a protocol violation.
 
