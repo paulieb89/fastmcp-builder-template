@@ -11,6 +11,50 @@ _STOP = {"a", "an", "and", "for", "from", "in", "of", "or", "the", "to", "with"}
 _GENERIC_NAME_WORDS = {"tool", "resource", "prompt", "mcp", "fastmcp"}
 
 
+# Spec citations per finding code. See docs/check-audit.md for the full table.
+# Tuple is (spec_source, spec_section). `spec_source="opinion"` marks findings
+# that aren't grounded in the MCP/FastMCP spec — those stay callable but the
+# design-review skill doesn't auto-fire them.
+_CITATIONS: dict[str, tuple[str, str | None]] = {
+    "manifest.not_object": ("MCP", "server/initialize"),
+    "manifest.missing_name": ("MCP", "server/initialize"),
+    "manifest.missing_primitives": ("MCP", "server/capabilities"),
+    "manifest.name_format": ("FastMCP", "servers/server.md"),
+    "primitives.not_list": ("MCP", "server/capabilities"),
+    "primitive.not_object": ("MCP", "server/capabilities"),
+    "primitive.invalid_kind": ("MCP", "server/tools-resources-prompts"),
+    "primitive.missing_name": ("MCP", "server/tools-resources-prompts"),
+    "primitive.name_format": ("FastMCP", "servers/tools.md#naming"),
+    "primitive.duplicate_name": ("MCP", "server/capabilities"),
+    "primitive.description_too_short": ("MCP", "server/tools#description"),
+    "tool.missing_parameters": ("MCP", "server/tools#inputSchema"),
+    "resource.missing_uri": ("MCP", "server/resources#uri"),
+    "prompt.missing_arguments": ("opinion", None),
+}
+
+
+def _finding(
+    severity: Severity,
+    code: str,
+    message: str,
+    path: str,
+) -> ReviewFinding:
+    """Construct a ReviewFinding, looking up the spec citation by code.
+
+    Dynamic codes like `manifest.missing_<key>` fall back to the `manifest.missing_name`
+    citation when not exact-matched (same spec section applies).
+    """
+    source, section = _CITATIONS.get(code, _CITATIONS.get(code.rsplit("_", 1)[0], (None, None)))
+    return ReviewFinding(
+        severity=severity,
+        code=code,
+        message=message,
+        path=path,
+        spec_source=source,
+        spec_section=section,
+    )
+
+
 def _words(text: str) -> set[str]:
     return set(re.findall(r"[a-z0-9]+", text.lower()))
 
@@ -22,7 +66,7 @@ def review_fastmcp_manifest_data(manifest: dict[str, Any]) -> ManifestReview:
         return ManifestReview(
             passed=False,
             findings=[
-                ReviewFinding(
+                _finding(
                     severity=Severity.HIGH,
                     code="manifest.not_object",
                     message="Manifest must be a JSON object.",
@@ -34,7 +78,7 @@ def review_fastmcp_manifest_data(manifest: dict[str, Any]) -> ManifestReview:
     for key in ("name", "primitives"):
         if key not in manifest:
             findings.append(
-                ReviewFinding(
+                _finding(
                     severity=Severity.HIGH,
                     code=f"manifest.missing_{key}",
                     message=f"Manifest is missing required field '{key}'.",
@@ -45,7 +89,7 @@ def review_fastmcp_manifest_data(manifest: dict[str, Any]) -> ManifestReview:
     name = manifest.get("name")
     if name is not None and (not isinstance(name, str) or not _NAME_PATTERN.match(name)):
         findings.append(
-            ReviewFinding(
+            _finding(
                 severity=Severity.MEDIUM,
                 code="manifest.name_format",
                 message="Manifest name should be lowercase snake_case, 3-64 characters.",
@@ -56,7 +100,7 @@ def review_fastmcp_manifest_data(manifest: dict[str, Any]) -> ManifestReview:
     primitives = manifest.get("primitives", [])
     if not isinstance(primitives, list):
         findings.append(
-            ReviewFinding(
+            _finding(
                 severity=Severity.HIGH,
                 code="primitives.not_list",
                 message="'primitives' must be a list.",
@@ -70,7 +114,7 @@ def review_fastmcp_manifest_data(manifest: dict[str, Any]) -> ManifestReview:
         path = f"$.primitives[{index}]"
         if not isinstance(primitive, dict):
             findings.append(
-                ReviewFinding(
+                _finding(
                     severity=Severity.HIGH,
                     code="primitive.not_object",
                     message="Each primitive must be an object.",
@@ -85,7 +129,7 @@ def review_fastmcp_manifest_data(manifest: dict[str, Any]) -> ManifestReview:
 
         if kind not in {"tool", "resource", "prompt"}:
             findings.append(
-                ReviewFinding(
+                _finding(
                     severity=Severity.HIGH,
                     code="primitive.invalid_kind",
                     message="Primitive kind must be one of: tool, resource, prompt.",
@@ -98,7 +142,7 @@ def review_fastmcp_manifest_data(manifest: dict[str, Any]) -> ManifestReview:
         # on tools and prompts, where the name IS the identifier the model sees.
         if not isinstance(primitive_name, str):
             findings.append(
-                ReviewFinding(
+                _finding(
                     severity=Severity.HIGH,
                     code="primitive.missing_name",
                     message="Primitive must declare a name.",
@@ -107,7 +151,7 @@ def review_fastmcp_manifest_data(manifest: dict[str, Any]) -> ManifestReview:
             )
         elif kind != "resource" and not _NAME_PATTERN.match(primitive_name):
             findings.append(
-                ReviewFinding(
+                _finding(
                     severity=Severity.MEDIUM,
                     code="primitive.name_format",
                     message="Primitive name should be lowercase snake_case, 3-64 characters.",
@@ -116,7 +160,7 @@ def review_fastmcp_manifest_data(manifest: dict[str, Any]) -> ManifestReview:
             )
         elif primitive_name in seen_names:
             findings.append(
-                ReviewFinding(
+                _finding(
                     severity=Severity.HIGH,
                     code="primitive.duplicate_name",
                     message=f"Duplicate primitive name '{primitive_name}'.",
@@ -128,7 +172,7 @@ def review_fastmcp_manifest_data(manifest: dict[str, Any]) -> ManifestReview:
 
         if not isinstance(description, str) or len(description.strip()) < 20:
             findings.append(
-                ReviewFinding(
+                _finding(
                     severity=Severity.MEDIUM,
                     code="primitive.description_too_short",
                     message="Primitive descriptions should be specific enough for reliable use.",
@@ -144,7 +188,7 @@ def review_fastmcp_manifest_data(manifest: dict[str, Any]) -> ManifestReview:
             key in primitive for key in ("parameters", "inputSchema", "input_schema")
         ):
             findings.append(
-                ReviewFinding(
+                _finding(
                     severity=Severity.MEDIUM,
                     code="tool.missing_parameters",
                     message="Tools should declare an input schema (parameters / inputSchema / input_schema), even when the object is empty.",
@@ -160,7 +204,7 @@ def review_fastmcp_manifest_data(manifest: dict[str, Any]) -> ManifestReview:
             key in primitive for key in ("uri", "uriTemplate", "uri_template")
         ):
             findings.append(
-                ReviewFinding(
+                _finding(
                     severity=Severity.HIGH,
                     code="resource.missing_uri",
                     message="Resources must declare a stable URI or URI pattern (uri / uriTemplate / uri_template).",
@@ -170,7 +214,7 @@ def review_fastmcp_manifest_data(manifest: dict[str, Any]) -> ManifestReview:
 
         if kind == "prompt" and "arguments" not in primitive:
             findings.append(
-                ReviewFinding(
+                _finding(
                     severity=Severity.LOW,
                     code="prompt.missing_arguments",
                     message="Prompts should document their expected arguments, even if empty.",

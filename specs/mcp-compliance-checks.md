@@ -150,7 +150,7 @@ new fields populated.
 
 ---
 
-## audit_existing_checks_for_citations
+## audit_existing_checks_for_citations [done]
 
 **Spec source:** Self-referential — this is the SDD audit.
 
