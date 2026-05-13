@@ -200,6 +200,191 @@ def test_extracted_manifest_passes_review_for_real_example() -> None:
     )
 
 
+def test_optional_int_unwraps_to_integer(tmp_path: Path) -> None:
+    """Optional[int] must return 'integer' — not the 'string' fallback.
+
+    Before the type-mapping fix, Optional[int] would extract as 'string'
+    because Optional's outer Subscript name was unknown to the type map.
+    """
+    path = _write(
+        tmp_path,
+        '''
+from fastmcp import FastMCP
+from typing import Optional
+
+mcp = FastMCP("Demo")
+
+@mcp.tool
+def search(query: str, limit: Optional[int] = None) -> str:
+    """Search."""
+    return ""
+''',
+    )
+    manifest = extract_manifest_from_source(str(path))
+    tool = manifest["primitives"][0]
+    assert tool["input_schema"]["properties"]["limit"]["type"] == "integer"
+
+
+def test_union_int_or_none_unwraps_to_integer(tmp_path: Path) -> None:
+    """PEP 604 `int | None` must return 'integer', not 'string'."""
+    path = _write(
+        tmp_path,
+        '''
+from fastmcp import FastMCP
+
+mcp = FastMCP("Demo")
+
+@mcp.tool
+def search(query: str, limit: int | None = None) -> str:
+    """Search."""
+    return ""
+''',
+    )
+    manifest = extract_manifest_from_source(str(path))
+    tool = manifest["primitives"][0]
+    assert tool["input_schema"]["properties"]["limit"]["type"] == "integer"
+
+
+def test_literal_surfaces_enum(tmp_path: Path) -> None:
+    """Literal['a','b','c'] should expose the allowed values to the model."""
+    path = _write(
+        tmp_path,
+        '''
+from fastmcp import FastMCP
+from typing import Literal
+
+mcp = FastMCP("Demo")
+
+@mcp.tool
+def update_state(request_id: int, state: Literal["waiting", "rejected", "successful"]) -> str:
+    """Update."""
+    return ""
+''',
+    )
+    manifest = extract_manifest_from_source(str(path))
+    state_prop = manifest["primitives"][0]["input_schema"]["properties"]["state"]
+    assert state_prop["type"] == "string"
+    assert state_prop["enum"] == ["waiting", "rejected", "successful"]
+
+
+def test_optional_literal_combines_unwrap_and_enum(tmp_path: Path) -> None:
+    """Optional[Literal[...]] = string enum + not required."""
+    path = _write(
+        tmp_path,
+        '''
+from fastmcp import FastMCP
+from typing import Literal, Optional
+
+mcp = FastMCP("Demo")
+
+@mcp.tool
+def fetch(slug: str, mode: Optional[Literal["fast", "slow"]] = None) -> str:
+    """Fetch."""
+    return ""
+''',
+    )
+    manifest = extract_manifest_from_source(str(path))
+    mode_prop = manifest["primitives"][0]["input_schema"]["properties"]["mode"]
+    assert mode_prop["type"] == "string"
+    assert mode_prop["enum"] == ["fast", "slow"]
+
+
+def test_pydantic_basemodel_param_expands_to_inline_schema(tmp_path: Path) -> None:
+    """The bailii pattern: tool takes `params: SearchInput` where SearchInput
+    is a Pydantic BaseModel. The extractor should expand the model's fields
+    into the input schema so the model can see what to put inside `params`.
+    """
+    path = _write(
+        tmp_path,
+        '''
+from fastmcp import FastMCP
+from pydantic import BaseModel, Field
+
+mcp = FastMCP("Demo")
+
+class SearchInput(BaseModel):
+    query: str = Field(description="What to search for", min_length=2, max_length=500)
+    limit: int = Field(default=10, ge=1, le=30, description="Max results")
+
+@mcp.tool
+def search(params: SearchInput) -> str:
+    """Search."""
+    return ""
+''',
+    )
+    manifest = extract_manifest_from_source(str(path))
+    tool = manifest["primitives"][0]
+    params_prop = tool["input_schema"]["properties"]["params"]
+
+    # The wrapping params field is an object whose properties mirror SearchInput.
+    assert params_prop["type"] == "object"
+    fields = params_prop["properties"]
+    assert fields["query"]["type"] == "string"
+    assert fields["query"]["description"] == "What to search for"
+    assert fields["query"]["minLength"] == 2
+    assert fields["query"]["maxLength"] == 500
+    assert fields["limit"]["type"] == "integer"
+    assert fields["limit"]["minimum"] == 1
+    assert fields["limit"]["maximum"] == 30
+    # Required fields = those without a default value.
+    assert params_prop["required"] == ["query"]
+
+
+def test_unknown_class_falls_back_to_string(tmp_path: Path) -> None:
+    """A custom class with no matching definition in the module shouldn't crash
+    the extractor — it falls back to 'string' as before."""
+    path = _write(
+        tmp_path,
+        '''
+from fastmcp import FastMCP
+from somewhere_external import ExternalThing
+
+mcp = FastMCP("Demo")
+
+@mcp.tool
+def use_it(thing: ExternalThing) -> str:
+    """Use it."""
+    return ""
+''',
+    )
+    manifest = extract_manifest_from_source(str(path))
+    assert manifest["primitives"][0]["input_schema"]["properties"]["thing"]["type"] == "string"
+
+
+def test_annotated_field_surfaces_description_and_bounds(tmp_path: Path) -> None:
+    """Annotated[int, Field(ge=1, le=100, description='...')] surfaces metadata."""
+    path = _write(
+        tmp_path,
+        '''
+from fastmcp import FastMCP
+from typing import Annotated
+from pydantic import Field
+
+mcp = FastMCP("Demo")
+
+@mcp.tool
+def search(
+    query: Annotated[str, Field(description="What to search for", min_length=2, max_length=500)],
+    limit: Annotated[int, Field(ge=1, le=30, description="Maximum results")] = 10,
+) -> str:
+    """Search."""
+    return ""
+''',
+    )
+    manifest = extract_manifest_from_source(str(path))
+    props = manifest["primitives"][0]["input_schema"]["properties"]
+
+    assert props["query"]["type"] == "string"
+    assert props["query"]["description"] == "What to search for"
+    assert props["query"]["minLength"] == 2
+    assert props["query"]["maxLength"] == 500
+
+    assert props["limit"]["type"] == "integer"
+    assert props["limit"]["minimum"] == 1
+    assert props["limit"]["maximum"] == 30
+    assert props["limit"]["description"] == "Maximum results"
+
+
 def test_resource_without_name_kwarg_falls_back_to_function_name(tmp_path: Path) -> None:
     path = _write(
         tmp_path,
