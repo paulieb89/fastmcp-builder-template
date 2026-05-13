@@ -5,6 +5,7 @@ from typing import Any
 from fastmcp import FastMCP
 
 from fastmcp_builder.checks import (
+    check_prompt_argument_descriptions as _check_prompt_argument_descriptions,
     check_resource_mime_type_declared as _check_resource_mime_type_declared,
     check_silent_error_returns as _check_silent_error_returns,
 )
@@ -82,6 +83,18 @@ def extract_manifest_from_source(path: str) -> dict[str, Any]:
     Does not execute the source.
     """
     return _extract_manifest_from_source(path)
+
+
+@mcp.tool
+def check_prompt_argument_descriptions(path: str) -> CheckReport:
+    """AST-scan a FastMCP server source for `@mcp.prompt` arguments that lack
+    descriptions. Descriptions can live in `Annotated[X, Field(description=...)]`
+    or in the docstring's `Args:` block.
+
+    Spec source: MCP — `PromptArgument.description` SHOULD be set.
+    Severity MEDIUM (SHOULD, not MUST).
+    """
+    return _check_prompt_argument_descriptions(path)
 
 
 @mcp.tool

@@ -277,7 +277,7 @@ test fixture with a missing `mime_type=` returns the expected MEDIUM.
 
 ---
 
-## check_prompt_argument_descriptions
+## check_prompt_argument_descriptions [done]
 
 **Spec source:** MCP — `PromptArgument.description` field
 (`modelcontextprotocol.io/specification/server/prompts`). Severity: MEDIUM
